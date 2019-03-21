@@ -1,0 +1,3736 @@
+L 1 "..\..\RL-ARM\Config\Net_Debug.c"
+N/*----------------------------------------------------------------------------
+N *      RL-ARM - TCPnet
+N *----------------------------------------------------------------------------
+N *      Name:    NET_DEBUG.C
+N *      Purpose: Debug Module
+N *      Rev.:    V4.71
+N *----------------------------------------------------------------------------
+N *      This code is part of the RealView Run-Time Library.
+N *      Copyright (c) 2004-2013 KEIL - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#include <Net_Config.h>
+L 1 "..\..\RL-ARM\Config\Net_Config.h" 1
+N/*----------------------------------------------------------------------------
+N *      RL-ARM - TCPnet
+N *----------------------------------------------------------------------------
+N *      Name:    NET_CONFIG.H
+N *      Purpose: Common TCPnet Definitions
+N *      Rev.:    V4.73
+N *----------------------------------------------------------------------------
+N *      This code is part of the RealView Run-Time Library.
+N *      Copyright (c) 2004-2013 KEIL - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#ifndef __NET_CONFIG_H__
+N#define __NET_CONFIG_H__
+N
+N#include <RTL.h>
+L 1 "..\..\RL-ARM\RL-RTX\inc\RTL.h" 1
+N/*----------------------------------------------------------------------------
+N *      RL-ARM - A P I 
+N *----------------------------------------------------------------------------
+N *      Name:    RTL.H 
+N *      Purpose: Application Programming Interface 
+N *      Rev.:    V4.73
+N *----------------------------------------------------------------------------
+N *      This code is part of the RealView Run-Time Library.
+N *      Copyright (c) 2004-2013 KEIL - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#ifndef __RTL_H__
+N#define __RTL_H__
+N
+N/* RL-ARM version number. */
+N#define __RL_ARM_VER    473
+N 
+N#define __task          __declspec(noreturn)
+N#define __used          __attribute__((used))
+N
+N#ifndef NULL
+N #ifdef __cplusplus
+S  #define NULL          0
+N #else
+N  #define NULL          ((void *) 0)
+N #endif
+N#endif
+N
+N#ifndef EOF
+N #define EOF            (-1)
+N#endif
+N
+N#ifndef __size_t
+N #define __size_t       1
+N typedef unsigned int   size_t;
+N#endif
+N
+Ntypedef signed char     S8;
+Ntypedef unsigned char   U8;
+Ntypedef short           S16;
+Ntypedef unsigned short  U16;
+Ntypedef int             S32;
+Ntypedef unsigned int    U32;
+Ntypedef long long       S64;
+Ntypedef unsigned long long U64;
+Ntypedef unsigned char   BIT;
+Ntypedef unsigned int    BOOL;
+N
+N#ifndef __TRUE
+N #define __TRUE         1
+N#endif
+N#ifndef __FALSE
+N #define __FALSE        0
+N#endif
+N
+N#ifdef __BIG_ENDIAN
+S #define U32_LE(v)      (U32)(__rev(v))
+S #define U16_LE(v)      (U16)(__rev(v) >> 16)
+S #define U32_BE(v)      (U32)(v)
+S #define U16_BE(v)      (U16)(v)
+N#else
+N #define U32_BE(v)      (U32)(__rev(v))
+N #define U16_BE(v)      (U16)(__rev(v) >> 16)
+N #define U32_LE(v)      (U32)(v)
+N #define U16_LE(v)      (U16)(v)
+N#endif
+N#define ntohs(v)        U16_BE(v)
+N#define ntohl(v)        U32_BE(v)
+N#define htons(v)        ntohs(v)
+N#define htonl(v)        ntohl(v)
+N
+N/*----------------------------------------------------------------------------
+N *                             RTX Kernel API
+N *---------------------------------------------------------------------------*/
+N
+N#ifdef __cplusplus
+Sextern "C"  {
+N#endif
+N
+N/* Definition of Semaphore type */
+Ntypedef U32 OS_SEM[2];
+N
+N/* Definition of Mailbox type */
+N#define os_mbx_declare(name,cnt)    U32 name [4 + cnt]
+Ntypedef U32 OS_MBX[];
+N
+N/* Definition of Mutex type */
+Ntypedef U32 OS_MUT[4];
+N
+N/* Task Identification number. */
+Ntypedef U32 OS_TID;
+N
+N/* Function return of system calls returning an object identification */
+Ntypedef void *OS_ID;
+N
+N/* Function return of system calls indicating an event or completion state */
+Ntypedef U32 OS_RESULT;
+N
+N/* Return codes */
+N#define OS_R_TMO        0x01
+N#define OS_R_EVT        0x02
+N#define OS_R_SEM        0x03
+N#define OS_R_MBX        0x04
+N#define OS_R_MUT        0x05
+N
+N#define OS_R_OK         0x00
+N#define OS_R_NOK        0xff
+N
+N#define OS_TCB_SIZE     56
+N#define OS_TMR_SIZE     8
+N
+N/* Error Codes */
+N#define OS_ERR_STK_OVF  1
+N#define OS_ERR_FIFO_OVF 2
+N#define OS_ERR_MBX_OVF  3
+N
+N#if !(__TARGET_ARCH_6S_M || __TARGET_ARCH_7_M || __TARGET_ARCH_7E_M)
+X#if !(__TARGET_ARCH_6S_M || __TARGET_ARCH_7_M || 1)
+S
+S/*----------------------------------------------------------------------------
+S *      Functions ARM
+S *---------------------------------------------------------------------------*/
+S
+S/* Task Management */
+S#define os_sys_init(tsk)              os_sys_init0(tsk,0,NULL)
+S#define os_sys_init_prio(tsk,prio)    os_sys_init0(tsk,prio,NULL)
+S#define os_sys_init_user(tsk,prio,stk,size)                                   \
+S                                      os_sys_init0(tsk,prio|(size<<8),stk)
+X#define os_sys_init_user(tsk,prio,stk,size)                                                                         os_sys_init0(tsk,prio|(size<<8),stk)
+S#define os_tsk_create(tsk,prio)       os_tsk_create0(tsk,prio,NULL,NULL)
+S#define os_tsk_create_user(tsk,prio,stk,size)                                 \
+S                                      os_tsk_create0(tsk,prio|(size<<8),stk,NULL)
+X#define os_tsk_create_user(tsk,prio,stk,size)                                                                       os_tsk_create0(tsk,prio|(size<<8),stk,NULL)
+S#define os_tsk_create_ex(tsk,prio,argv) os_tsk_create_ex0(tsk,prio,NULL,argv)
+S#define os_tsk_create_user_ex(tsk,prio,stk,size,argv)                         \
+S                                      os_tsk_create_ex0(tsk,prio|(size<<8),stk,argv)
+X#define os_tsk_create_user_ex(tsk,prio,stk,size,argv)                                                               os_tsk_create_ex0(tsk,prio|(size<<8),stk,argv)
+S#define os_tsk_delete_self()          os_tsk_delete(0)
+S#define os_tsk_prio_self(prio)        os_tsk_prio(0,prio)
+S#define isr_tsk_get()                 os_tsk_self()
+S
+Sextern void      os_sys_init0 (void (*task)(void), U32 prio_stksz, void *stk);
+Sextern OS_TID    os_tsk_create0 (void (*task)(void), U32 prio_stksz, 
+S                                 void *stk, void *argv);
+Sextern OS_TID    os_tsk_create_ex0 (void (*task)(void *), U32 prio_stksz, 
+S                                    void *stk, void *argv);
+Sextern OS_TID    os_tsk_self (void);
+Sextern void      os_tsk_pass (void);
+Sextern OS_RESULT os_tsk_prio (OS_TID task_id, U8 new_prio);
+Sextern OS_RESULT os_tsk_delete (OS_TID task_id);
+S
+S/* Event flag Management */
+S#define os_evt_wait_or(wflags,tmo)      os_evt_wait(wflags,tmo,__FALSE)
+S#define os_evt_wait_and(wflags,tmo)     os_evt_wait(wflags,tmo,__TRUE)
+S
+Sextern OS_RESULT os_evt_wait (U16 wait_flags, U16 timeout, BOOL and_wait);
+Sextern void      os_evt_set (U16 event_flags, OS_TID task_id);
+Sextern void      os_evt_clr (U16 clear_flags, OS_TID task_id);
+Sextern void      isr_evt_set (U16 event_flags, OS_TID task_id);
+Sextern U16       os_evt_get (void);
+S
+S/* Semaphore Management */
+Sextern void      os_sem_init (OS_ID semaphore, U16 token_count);
+Sextern OS_RESULT os_sem_send (OS_ID semaphore);
+Sextern OS_RESULT os_sem_wait (OS_ID semaphore, U16 timeout);
+Sextern void      isr_sem_send (OS_ID semaphore);
+S
+S/* Mailbox Management */
+S#define isr_mbx_check(mbx)              os_mbx_check(mbx)
+S
+Sextern void      os_mbx_init (OS_ID mailbox, U16 mbx_size);
+Sextern OS_RESULT os_mbx_send (OS_ID mailbox, void *message_ptr, U16 timeout);
+Sextern OS_RESULT os_mbx_wait (OS_ID mailbox, void  **message, U16 timeout);
+Sextern OS_RESULT os_mbx_check (OS_ID mailbox);
+Sextern void      isr_mbx_send (OS_ID mailbox, void *message_ptr);
+Sextern OS_RESULT isr_mbx_receive (OS_ID mailbox, void **message);
+S
+S/* Mutex Management */
+Sextern void      os_mut_init (OS_ID mutex);
+Sextern OS_RESULT os_mut_release (OS_ID mutex);
+Sextern OS_RESULT os_mut_wait (OS_ID mutex, U16 timeout);
+S
+S/* Time Management */
+Sextern U32       os_time_get (void);
+Sextern void      os_dly_wait (U16 delay_time);
+Sextern void      os_itv_set (U16 interval_time);
+Sextern void      os_itv_wait (void);
+S
+S/* User Timer Management */
+Sextern OS_ID     os_tmr_create (U16 tcnt, U16 info);
+Sextern OS_ID     os_tmr_kill (OS_ID timer);
+S
+S/* System Functions */
+Sextern U32       os_suspend (void);
+Sextern void      os_resume (U32 sleep_time);
+Sextern void      tsk_lock (void) __swi (5);
+Sextern void      tsk_unlock (void);
+S
+S/* Fixed Memory Block Management Functions */
+Sextern int       _init_box (void *box_mem, U32 box_size, U32 blk_size);
+Sextern void     *_alloc_box (void *box_mem) __swi (1);
+Sextern void     *_calloc_box (void *box_mem);
+Sextern int       _free_box (void *box_mem, void *box) __swi (2);
+S
+N#else
+N
+N/*----------------------------------------------------------------------------
+N *      Functions Cortex-M
+N *---------------------------------------------------------------------------*/
+N
+N#define __SVC_0         __svc_indirect(0)
+N
+N/* Task Management */
+Nextern void      os_set_env    (void);
+Nextern void      rt_sys_init   (void (*task)(void), U8 priority, void *stk);
+Nextern void      rt_tsk_pass   (void);
+Nextern OS_TID    rt_tsk_self   (void);
+Nextern OS_RESULT rt_tsk_prio   (OS_TID task_id, U8 new_prio);
+Nextern OS_TID    rt_tsk_create (void (*task)(void), U8 priority, void *stk, void *argv);
+Nextern OS_RESULT rt_tsk_delete (OS_TID task_id);
+N
+N#define os_sys_init(tsk)              os_set_env();                           \
+N                                      _os_sys_init((U32)rt_sys_init,tsk,0,NULL)
+X#define os_sys_init(tsk)              os_set_env();                                                                 _os_sys_init((U32)rt_sys_init,tsk,0,NULL)
+N#define os_sys_init_user(tsk,prio,stk,size)                                   \
+N                                      os_set_env();                           \
+N                                      _os_sys_init((U32)rt_sys_init,tsk,prio|(size<<8),stk)
+X#define os_sys_init_user(tsk,prio,stk,size)                                                                         os_set_env();                                                                 _os_sys_init((U32)rt_sys_init,tsk,prio|(size<<8),stk)
+N#define os_sys_init_prio(tsk,prio)    os_set_env();                           \
+N                                      _os_sys_init((U32)rt_sys_init,tsk,prio,NULL)
+X#define os_sys_init_prio(tsk,prio)    os_set_env();                                                                 _os_sys_init((U32)rt_sys_init,tsk,prio,NULL)
+N#define os_tsk_create(tsk,prio)       _os_tsk_create((U32)rt_tsk_create,tsk,prio,NULL,NULL)
+N#define os_tsk_create_user(tsk,prio,stk,size)                                 \
+N                                      _os_tsk_create((U32)rt_tsk_create,tsk,prio|(size<<8),stk,NULL)
+X#define os_tsk_create_user(tsk,prio,stk,size)                                                                       _os_tsk_create((U32)rt_tsk_create,tsk,prio|(size<<8),stk,NULL)
+N#define os_tsk_create_ex(tsk,prio,argv) _os_tsk_create_ex((U32)rt_tsk_create,tsk,prio,NULL,argv)
+N#define os_tsk_create_user_ex(tsk,prio,stk,size,argv)                         \
+N                                      _os_tsk_create_ex((U32)rt_tsk_create,tsk,prio|(size<<8),stk,argv)
+X#define os_tsk_create_user_ex(tsk,prio,stk,size,argv)                                                               _os_tsk_create_ex((U32)rt_tsk_create,tsk,prio|(size<<8),stk,argv)
+N#define os_tsk_self()                 _os_tsk_self((U32)rt_tsk_self)
+N#define os_tsk_pass()                 _os_tsk_pass((U32)rt_tsk_pass)
+N#define os_tsk_prio(task_id,new_prio) _os_tsk_prio((U32)rt_tsk_prio,task_id,new_prio)
+N#define os_tsk_prio_self(prio)        _os_tsk_prio((U32)rt_tsk_prio,0,prio)
+N#define os_tsk_delete(task_id)        _os_tsk_delete((U32)rt_tsk_delete,task_id)
+N#define os_tsk_delete_self()          _os_tsk_delete((U32)rt_tsk_delete, 0)
+N#define isr_tsk_get()                 rt_tsk_self()
+N
+Nextern void      _os_sys_init(U32 p, void (*task)(void), U32 prio_stksz,
+N                                     void *stk)                        __SVC_0;
+X                                     void *stk)                        __svc_indirect(0);
+Nextern OS_TID    _os_tsk_create (U32 p, void (*task)(void), U32 prio_stksz,
+N                                        void *stk, void *argv)         __SVC_0;
+X                                        void *stk, void *argv)         __svc_indirect(0);
+Nextern OS_TID    _os_tsk_create_ex (U32 p, void (*task)(void *), U32 prio_stksz,
+N                                           void *stk, void *argv)      __SVC_0;
+X                                           void *stk, void *argv)      __svc_indirect(0);
+Nextern OS_TID    _os_tsk_self (U32 p)                                  __SVC_0;
+Xextern OS_TID    _os_tsk_self (U32 p)                                  __svc_indirect(0);
+Nextern void      _os_tsk_pass (U32 p)                                  __SVC_0;
+Xextern void      _os_tsk_pass (U32 p)                                  __svc_indirect(0);
+Nextern OS_RESULT _os_tsk_prio (U32 p, OS_TID task_id, U8 new_prio)     __SVC_0;
+Xextern OS_RESULT _os_tsk_prio (U32 p, OS_TID task_id, U8 new_prio)     __svc_indirect(0);
+Nextern OS_RESULT _os_tsk_delete (U32 p, OS_TID task_id)                __SVC_0;
+Xextern OS_RESULT _os_tsk_delete (U32 p, OS_TID task_id)                __svc_indirect(0);
+N
+N/* Event flag Management */
+Nextern OS_RESULT rt_evt_wait (U16 wait_flags,  U16 timeout, BOOL and_wait);
+Nextern void      rt_evt_set  (U16 event_flags, OS_TID task_id);
+Nextern void      rt_evt_clr  (U16 clear_flags, OS_TID task_id);
+Nextern U16       rt_evt_get  (void);
+N
+N#define os_evt_wait_or(wflags,tmo)    _os_evt_wait((U32)rt_evt_wait,wflags,tmo,__FALSE)
+N#define os_evt_wait_and(wflags,tmo)   _os_evt_wait((U32)rt_evt_wait,wflags,tmo,__TRUE)
+N#define os_evt_set(evt_flags,task_id) _os_evt_set((U32)rt_evt_set,evt_flags,task_id)
+N#define os_evt_clr(clr_flags,task_id) _os_evt_clr((U32)rt_evt_clr,clr_flags,task_id)
+N#define os_evt_get()                  _os_evt_get((U32)rt_evt_get)
+N
+Nextern OS_RESULT _os_evt_wait(U32 p, U16 wait_flags, U16 timeout,
+N                                     BOOL and_wait)                    __SVC_0;
+X                                     BOOL and_wait)                    __svc_indirect(0);
+Nextern void      _os_evt_set (U32 p, U16 event_flags, OS_TID task_id)  __SVC_0;
+Xextern void      _os_evt_set (U32 p, U16 event_flags, OS_TID task_id)  __svc_indirect(0);
+Nextern void      _os_evt_clr (U32 p, U16 clear_flags, OS_TID task_id)  __SVC_0;
+Xextern void      _os_evt_clr (U32 p, U16 clear_flags, OS_TID task_id)  __svc_indirect(0);
+Nextern U16       _os_evt_get (U32 p)                                   __SVC_0;
+Xextern U16       _os_evt_get (U32 p)                                   __svc_indirect(0);
+Nextern void      isr_evt_set (U16 event_flags, OS_TID task_id);
+N
+N/* Semaphore Management */
+Nextern void      rt_sem_init (OS_ID semaphore, U16 token_count);
+Nextern OS_RESULT rt_sem_send (OS_ID semaphore);
+Nextern OS_RESULT rt_sem_wait (OS_ID semaphore, U16 timeout);
+N
+N#define os_sem_init(sem,t_count)     _os_sem_init((U32)rt_sem_init,sem,t_count)
+N#define os_sem_send(sem)             _os_sem_send((U32)rt_sem_send,sem)
+N#define os_sem_wait(sem,tmo)         _os_sem_wait((U32)rt_sem_wait,sem,tmo)
+N
+Nextern void      _os_sem_init (U32 p, OS_ID semaphore, 
+N                                      U16 token_count)                 __SVC_0;
+X                                      U16 token_count)                 __svc_indirect(0);
+Nextern OS_RESULT _os_sem_send (U32 p, OS_ID semaphore)                 __SVC_0;
+Xextern OS_RESULT _os_sem_send (U32 p, OS_ID semaphore)                 __svc_indirect(0);
+Nextern OS_RESULT _os_sem_wait (U32 p, OS_ID semaphore, U16 timeout)    __SVC_0;
+Xextern OS_RESULT _os_sem_wait (U32 p, OS_ID semaphore, U16 timeout)    __svc_indirect(0);
+Nextern void      isr_sem_send (OS_ID semaphore);
+N
+N/* Mailbox Management */
+Nextern void      rt_mbx_init  (OS_ID mailbox, U16 mbx_size);
+Nextern OS_RESULT rt_mbx_send  (OS_ID mailbox, void *p_msg,    U16 timeout);
+Nextern OS_RESULT rt_mbx_wait  (OS_ID mailbox, void **message, U16 timeout);
+Nextern OS_RESULT rt_mbx_check (OS_ID mailbox);
+N
+N#define os_mbx_init(mbx,mbx_size)     _os_mbx_init((U32)rt_mbx_init,mbx,mbx_size)
+N#define os_mbx_send(mbx,p_msg,tmo)    _os_mbx_send((U32)rt_mbx_send,mbx,p_msg,tmo)
+N#define os_mbx_wait(mbx,message,tmo)  _os_mbx_wait((U32)rt_mbx_wait,mbx,message,tmo)
+N#define os_mbx_check(mbx)             _os_mbx_check((U32)rt_mbx_check,mbx)
+N#define isr_mbx_check(mbx)            rt_mbx_check(mbx)
+N
+Nextern void      _os_mbx_init (U32 p, OS_ID mailbox, U16 mbx_size)     __SVC_0;
+Xextern void      _os_mbx_init (U32 p, OS_ID mailbox, U16 mbx_size)     __svc_indirect(0);
+Nextern OS_RESULT _os_mbx_send (U32 p, OS_ID mailbox, void *message_ptr,
+N                                      U16 timeout)                     __SVC_0;
+X                                      U16 timeout)                     __svc_indirect(0);
+Nextern OS_RESULT _os_mbx_wait (U32 p, OS_ID mailbox, void  **message,
+N                                      U16 timeout)                     __SVC_0;
+X                                      U16 timeout)                     __svc_indirect(0);
+Nextern OS_RESULT _os_mbx_check (U32 p, OS_ID mailbox)                  __SVC_0;
+Xextern OS_RESULT _os_mbx_check (U32 p, OS_ID mailbox)                  __svc_indirect(0);
+Nextern void      isr_mbx_send (OS_ID mailbox, void *message_ptr);
+Nextern OS_RESULT isr_mbx_receive (OS_ID mailbox, void **message);
+N
+N/* Mutex Management */
+Nextern void      rt_mut_init    (OS_ID mutex);
+Nextern OS_RESULT rt_mut_release (OS_ID mutex);
+Nextern OS_RESULT rt_mut_wait    (OS_ID mutex, U16 timeout);
+N
+N#define os_mut_init(mutex)         _os_mut_init((U32)rt_mut_init,mutex)
+N#define os_mut_release(mutex)      _os_mut_release((U32)rt_mut_release,mutex)
+N#define os_mut_wait(mutex,timeout) _os_mut_wait((U32)rt_mut_wait,mutex,timeout)
+N
+Nextern void      _os_mut_init (U32 p, OS_ID mutex)                     __SVC_0;
+Xextern void      _os_mut_init (U32 p, OS_ID mutex)                     __svc_indirect(0);
+Nextern OS_RESULT _os_mut_release (U32 p, OS_ID mutex)                  __SVC_0;
+Xextern OS_RESULT _os_mut_release (U32 p, OS_ID mutex)                  __svc_indirect(0);
+Nextern OS_RESULT _os_mut_wait (U32 p, OS_ID mutex, U16 timeout)        __SVC_0;
+Xextern OS_RESULT _os_mut_wait (U32 p, OS_ID mutex, U16 timeout)        __svc_indirect(0);
+N
+N/* Time Management */
+Nextern U32       rt_time_get (void);
+Nextern void      rt_dly_wait (U16 delay_time);
+Nextern void      rt_itv_set  (U16 interval_time);
+Nextern void      rt_itv_wait (void);
+N
+N#define os_time_get()              _os_time_get((U32)rt_time_get)
+N#define os_dly_wait(delay_time)    _os_dly_wait((U32)rt_dly_wait,delay_time)
+N#define os_itv_set(interval_time)  _os_itv_set((U32)rt_itv_set,interval_time)
+N#define os_itv_wait()              _os_itv_wait((U32)rt_itv_wait)
+N
+Nextern U32       _os_time_get (U32 p)                                  __SVC_0;
+Xextern U32       _os_time_get (U32 p)                                  __svc_indirect(0);
+Nextern void      _os_dly_wait (U32 p, U16 delay_time)                  __SVC_0;
+Xextern void      _os_dly_wait (U32 p, U16 delay_time)                  __svc_indirect(0);
+Nextern void      _os_itv_set (U32 p, U16 interval_time)                __SVC_0;
+Xextern void      _os_itv_set (U32 p, U16 interval_time)                __svc_indirect(0);
+Nextern void      _os_itv_wait (U32 p)                                  __SVC_0;
+Xextern void      _os_itv_wait (U32 p)                                  __svc_indirect(0);
+N
+N/* User Timer Management */
+Nextern OS_ID     rt_tmr_create (U16 tcnt, U16 info);
+Nextern OS_ID     rt_tmr_kill   (OS_ID timer);
+N
+N#define os_tmr_create(tcnt,info)   _os_tmr_create((U32)rt_tmr_create,tcnt,info)
+N#define os_tmr_kill(timer)         _os_tmr_kill((U32)rt_tmr_kill,timer)
+N
+Nextern OS_ID     _os_tmr_create (U32 p, U16 tcnt, U16 info)            __SVC_0;
+Xextern OS_ID     _os_tmr_create (U32 p, U16 tcnt, U16 info)            __svc_indirect(0);
+Nextern OS_ID     _os_tmr_kill (U32 p, OS_ID timer)                     __SVC_0;
+Xextern OS_ID     _os_tmr_kill (U32 p, OS_ID timer)                     __svc_indirect(0);
+N
+N/* Memory Management */
+Nextern U32   rt_init_mem  (void *pool, U32  size);
+Nextern void *rt_alloc_mem (void *pool, U32  size);
+Nextern U32   rt_free_mem  (void *pool, void *mem);
+N
+N#define os_init_mem(pool,size)    _os_init_mem((U32)rt_init_mem, pool,size)
+N#define os_alloc_mem(pool, size)  _os_alloc_mem((U32)rt_alloc_mem, pool,size)
+N#define os_free_mem(pool, mem)    _os_free_mem((U32)rt_free_mem, pool, mem)
+N
+Nextern U32      _os_init_mem(U32 p, void * pool, U32 size)    __SVC_0;
+Xextern U32      _os_init_mem(U32 p, void * pool, U32 size)    __svc_indirect(0);
+Nextern void *   _os_alloc_mem(U32 p, void * pool, U32 size)   __SVC_0;
+Xextern void *   _os_alloc_mem(U32 p, void * pool, U32 size)   __svc_indirect(0);
+Nextern U32      _os_free_mem(U32 p, void * pool, void *mem)   __SVC_0;
+Xextern U32      _os_free_mem(U32 p, void * pool, void *mem)   __svc_indirect(0);
+N
+N
+N/* System Functions */
+Nextern U32       rt_suspend    (void);
+Nextern void      rt_resume     (U32 sleep_time);
+Nextern void      rt_tsk_lock   (void);
+Nextern void      rt_tsk_unlock (void);
+N
+N#define os_suspend()               _os_suspend((U32)rt_suspend)
+N#define os_resume(sleep_time)      _os_resume((U32)rt_resume,sleep_time)
+N#define tsk_lock()                 _os_tsk_lock((U32)rt_tsk_lock)
+N#define tsk_unlock()               _os_tsk_unlock((U32)rt_tsk_unlock)
+N
+Nextern U32       _os_suspend (U32 p)                                   __SVC_0;
+Xextern U32       _os_suspend (U32 p)                                   __svc_indirect(0);
+Nextern void      _os_resume (U32 p, U32 sleep_time)                    __SVC_0;
+Xextern void      _os_resume (U32 p, U32 sleep_time)                    __svc_indirect(0);
+Nextern void      _os_tsk_lock (U32 p)                                  __SVC_0;
+Xextern void      _os_tsk_lock (U32 p)                                  __svc_indirect(0);
+Nextern void      _os_tsk_unlock (U32 p)                                __SVC_0;
+Xextern void      _os_tsk_unlock (U32 p)                                __svc_indirect(0);
+N
+N/* Fixed Memory Block Management Functions */
+Nextern int       _init_box (void *box_mem, U32 box_size, U32 blk_size);
+Nextern void     *_alloc_box (void *box_mem);
+Nextern void     *_calloc_box (void *box_mem);
+Nextern int       _free_box (void *box_mem, void *box);
+N
+N#endif
+N
+N#define BOX_ALIGN_8     0x80000000
+N#define _declare_box(pool,size,cnt)   U32 pool[(((size)+3)/4)*(cnt) + 3]
+N#define _declare_box8(pool,size,cnt)  U64 pool[(((size)+7)/8)*(cnt) + 2]
+N#define _init_box8(pool,size,bsize)   _init_box (pool,size,bsize | BOX_ALIGN_8)
+N
+N/* For compatibility with older configurations.*/
+N#define os_stk_overflow         os_error
+N
+N/*----------------------------------------------------------------------------
+N *                        Flash File System API
+N *---------------------------------------------------------------------------*/
+N
+N/* File System Type */
+Ntypedef enum _FS_TYPE {
+N  FS_TYPE_NONE = 0,                     /* No file system (volume unformatted)*/
+N  FS_TYPE_UNKNOWN,                      /* File system type is unknown       */
+N  FS_TYPE_FAT12,                        /* File system type is FAT12         */
+N  FS_TYPE_FAT16,                        /* File system type is FAT16         */
+N  FS_TYPE_FAT32,                        /* File system type is FAT32         */
+N  FS_TYPE_EFS                           /* File system type is EFS           */
+N} FS_TYPE;
+N
+Ntypedef struct {                        /* RL Time format (FFS, TCPnet)      */
+N  U8  hr;                               /* Hours    [0..23]                  */
+N  U8  min;                              /* Minutes  [0..59]                  */
+N  U8  sec;                              /* Seconds  [0..59]                  */
+N  U8  day;                              /* Day      [1..31]                  */
+N  U8  mon;                              /* Month    [1..12]                  */
+N  U16 year;                             /* Year     [1980..2107]             */
+N} RL_TIME;
+N
+Ntypedef struct {                        /* Search info record                */
+N  S8  name[256];                        /* Name                              */
+N  U32 size;                             /* File size in bytes                */
+N  U16 fileID;                           /* System Identification             */
+N  U8  attrib;                           /* Attributes                        */
+N  RL_TIME time;                         /* Create/Modify Time                */
+N} FINFO;
+N
+N/* Drive information */
+Ntypedef struct {
+N  FS_TYPE fs_type;                      /* Drives file system type           */
+N  U64     capacity;                     /* Drives capacity in bytes          */
+N} Drive_INFO;
+N
+Nextern int finit (const char *drive);
+Nextern int funinit (const char *drive);
+Nextern int fdelete (const char *filename);
+Nextern int frename (const char *oldname, const char *newname);
+Nextern int ffind (const char *pattern, FINFO *info);
+Nextern U64 ffree (const char *drive);
+Nextern int fformat (const char *drive);
+Nextern int fanalyse (const char *drive);
+Nextern int fcheck (const char *drive);
+Nextern int fdefrag (const char *drive);
+Nextern int fattrib (const char *par, const char *path);
+Nextern int fvol    (const char *drive, char *buf);
+Nextern int finfo   (const char *drive, Drive_INFO *info);
+N
+N/* The following macros provide for common functions */
+N#define unlink(fn)      fdelete(fn);
+N
+N/*----------------------------------------------------------------------------
+N *                             TCPnet API
+N *---------------------------------------------------------------------------*/
+N
+N/* UDP Options */
+N#define UDP_OPT_SEND_CS    0x01   /* Calculate Checksum for UDP send frames  */
+N#define UDP_OPT_CHK_CS     0x02   /* Verify Checksum for received UDP frames */
+N
+N/* TCP Socket Types */
+N#define TCP_TYPE_SERVER    0x01   /* Socket Type Server (open for listening) */
+N#define TCP_TYPE_CLIENT    0x02   /* Socket Type Client (initiate connect)   */
+N#define TCP_TYPE_DELAY_ACK 0x04   /* Socket Type Delayed Acknowledge         */
+N#define TCP_TYPE_FLOW_CTRL 0x08   /* Socket Type Flow Control                */
+N#define TCP_TYPE_KEEP_ALIVE 0x10  /* Socket Type Keep Alive                  */
+N#define TCP_TYPE_CLIENT_SERVER (TCP_TYPE_SERVER | TCP_TYPE_CLIENT)
+N
+N/* TCP Callback Events */
+N#define TCP_EVT_CONREQ     0      /* Connect request received event          */
+N#define TCP_EVT_CONNECT    1      /* Connection established event            */
+N#define TCP_EVT_CLOSE      2      /* Connection was properly closed          */
+N#define TCP_EVT_ABORT      3      /* Connection is for some reason aborted   */
+N#define TCP_EVT_ACK        4      /* Previously send data acknowledged       */
+N#define TCP_EVT_DATA       5      /* Data received event                     */
+N
+N/* TCP States */
+N#define TCP_STATE_FREE     0      /* Entry is free and unused                */
+N#define TCP_STATE_CLOSED   1      /* Entry allocated, socket still closed    */
+N#define TCP_STATE_LISTEN   2      /* Socket waiting for incoming connection  */
+N#define TCP_STATE_SYN_REC  3      /* SYN frame received                      */
+N#define TCP_STATE_SYN_SENT 4      /* SYN packet sent to establish a connect. */
+N#define TCP_STATE_FINW1    5      /* Tcp_close started FIN packet was sent   */
+N#define TCP_STATE_FINW2    6      /* Our FIN ack-ed, waiting for remote FIN  */
+N#define TCP_STATE_CLOSING  7      /* Received FIN independently of our FIN   */
+N#define TCP_STATE_LAST_ACK 8      /* Waiting for last ACK for our FIN        */
+N#define TCP_STATE_TWAIT    9      /* Timed waiting for 2MSL                  */
+N#define TCP_STATE_CONNECT  10     /* TCP Connection established              */
+N
+N/* BSD Socket Address Family */
+N#define AF_UNSPEC          0      /* Unspecified                             */
+N#define AF_INET            1      /* Internet Address Family (UDP, TCP)      */
+N#define AF_NETBIOS         2      /* NetBios-style addresses                 */
+N
+N/* BSD Protocol families, same as address families */
+N#define PF_UNSPEC          AF_UNSPEC
+N#define PF_INET            AF_INET
+N#define PF_NETBIOS         AF_NETBIOS
+N
+N/* BSD Socket Type */
+N#define SOCK_STREAM        1      /* Stream Socket (Connection oriented)     */
+N#define SOCK_DGRAM         2      /* Datagram Socket (Connectionless)        */
+N
+N/* BSD Socket Protocol */
+N#define IPPROTO_TCP        1      /* TCP Protocol                            */
+N#define IPPROTO_UDP        2      /* UDP Protocol                            */
+N
+N/* BSD Internet Addresses */
+N#define INADDR_ANY     0x00000000 /* All IP addresses accepted               */
+N#define INADDR_NONE    0xffffffff /* No IP address accepted                  */
+N
+N/* BSD Socket Return values */
+N#define SCK_SUCCESS         0     /* Success                                 */
+N#define SCK_ERROR         (-1)    /* General Error                           */
+N#define SCK_EINVALID      (-2)    /* Invalid socket descriptor               */
+N#define SCK_EINVALIDPARA  (-3)    /* Invalid parameter                       */
+N#define SCK_EWOULDBLOCK   (-4)    /* It would have blocked.                  */
+N#define SCK_EMEMNOTAVAIL  (-5)    /* Not enough memory in memory pool        */
+N#define SCK_ECLOSED       (-6)    /* Connection is closed or aborted         */
+N#define SCK_ELOCKED       (-7)    /* Socket is locked in RTX environment     */
+N#define SCK_ETIMEOUT      (-8)    /* Socket, Host Resolver timeout           */
+N#define SCK_EINPROGRESS   (-9)    /* Host Name resolving in progress         */
+N#define SCK_ENONAME       (-10)   /* Host Name not existing                  */
+N
+N/* BSD Socket flags parameter */
+N#define MSG_DONTWAIT       0x01   /* Enables non-blocking operation          */
+N#define MSG_PEEK           0x02   /* Peeks at the incoming data              */
+N
+N/* BSD Socket ioctl commands */
+N#define FIONBIO            1      /* Set mode (blocking/non-blocking)        */
+N#define FIO_DELAY_ACK      2      /* Set DELAY_ACK mode for stream socket    */
+N#define FIO_KEEP_ALIVE     3      /* Set KEEP_ALIVE mode for stream socket   */
+N#define FIO_FLOW_CTRL      4      /* Set FLOW_CTRL mode for stream socket    */
+N
+N/* ICMP (ping) Callback Events */
+N#define ICMP_EVT_SUCCESS   0      /* Pinged Host responded                   */
+N#define ICMP_EVT_TIMEOUT   1      /* Timeout, no ping response received      */
+N
+N/* DNS Client Callback Events */
+N#define DNS_EVT_SUCCESS    0      /* Host name successfully resolved         */
+N#define DNS_EVT_NONAME     1      /* DNS Error, no such name                 */
+N#define DNS_EVT_TIMEOUT    2      /* Timeout resolving host                  */
+N#define DNS_EVT_ERROR      3      /* Erroneous response packet               */
+N
+N/* DNS 'get_host_by_name()' result codes */
+N#define DNS_RES_OK         0      /* Resolver successfully started           */
+N#define DNS_ERROR_BUSY     1      /* Resolver busy, can't process request    */
+N#define DNS_ERROR_LABEL    2      /* Label in Hostname not valid             */
+N#define DNS_ERROR_NAME     3      /* Entire Hostname not valid               */
+N#define DNS_ERROR_NOSRV    4      /* Prim. DNS server not specified (0.0.0.0)*/
+N#define DNS_ERROR_PARAM    5      /* Invalid parameter                       */
+N
+N/* SMTP Client Callback Events */
+N#define SMTP_EVT_SUCCESS   0      /* Email successfully sent                 */
+N#define SMTP_EVT_TIMEOUT   1      /* Timeout sending email                   */
+N#define SMTP_EVT_ERROR     2      /* Error when sending email                */
+N
+N/* FTP Client Commands */
+N#define FTPC_CMD_PUT       0      /* Puts a file on FTP server               */
+N#define FTPC_CMD_GET       1      /* Retrieves a file from FTP server        */
+N#define FTPC_CMD_APPEND    2      /* Append file on FTP server (with create) */
+N#define FTPC_CMD_DELETE    3      /* Deletes a file on FTP server            */
+N#define FTPC_CMD_LIST      4      /* Lists files stored on FTP server        */
+N#define FTPC_CMD_RENAME    5      /* Renames a file on FTP server            */
+N#define FTPC_CMD_MKDIR     6      /* Makes a directory on FTP server         */
+N#define FTPC_CMD_RMDIR     7      /* Removes an empty directory on FTP server*/
+N#define FTPC_CMD_NLIST     8      /* Lists file names only (short format)    */
+N
+N/* FTP Client Callback Events */
+N#define FTPC_EVT_SUCCESS   0      /* File operation successful               */
+N#define FTPC_EVT_TIMEOUT   1      /* Timeout on file operation               */
+N#define FTPC_EVT_LOGINFAIL 2      /* Login error, username/passw invalid     */
+N#define FTPC_EVT_NOACCESS  3      /* File access not allowed                 */
+N#define FTPC_EVT_NOTFOUND  4      /* File not found                          */
+N#define FTPC_EVT_NOPATH    5      /* Working directory path not found        */
+N#define FTPC_EVT_ERRLOCAL  6      /* Local file open error                   */
+N#define FTPC_EVT_ERROR     7      /* Generic FTP client error                */
+N
+N/* TFTP Client Callback Events */
+N#define TFTPC_EVT_SUCCESS  0      /* File operation successful               */
+N#define TFTPC_EVT_TIMEOUT  1      /* Timeout on file operation               */
+N#define TFTPC_EVT_NOACCESS 2      /* File access not allowed                 */
+N#define TFTPC_EVT_NOTFOUND 3      /* File not found                          */
+N#define TFTPC_EVT_DISKFULL 4      /* Disk full (local or remote)             */
+N#define TFTPC_EVT_ERROR    5      /* Generic TFTP client error               */
+N
+N/* FTP Server Notification events */
+N#define FTP_EVT_LOGIN      0      /* User logged in, session is busy         */
+N#define FTP_EVT_LOGOUT     1      /* User logged out, session is idle        */
+N#define FTP_EVT_LOGFAIL    2      /* User login failed (invalid credentials) */
+N#define FTP_EVT_DOWNLOAD   3      /* File download ended                     */
+N#define FTP_EVT_UPLOAD     4      /* File upload ended                       */
+N#define FTP_EVT_DELETE     5      /* File deleted                            */
+N#define FTP_EVT_RENAME     6      /* File or directory renamed               */
+N#define FTP_EVT_MKDIR      7      /* Directory created                       */
+N#define FTP_EVT_RMDIR      8      /* Directory removed                       */
+N#define FTP_EVT_ERRLOCAL   9      /* Local file operation error              */
+N#define FTP_EVT_DENIED     10     /* Requested file operation denied         */
+N#define FTP_EVT_ERROR      11     /* Generic file operation error            */
+N
+N/* ARP Cache Entry types */
+N#define ARP_FIXED_IP       0      /* Fixed IP adrs is refreshed after tout   */
+N#define ARP_TEMP_IP        1      /* Temp adrs is removed after timeout      */
+N
+N/* BSD Socket typedef's */
+Ntypedef struct sockaddr {         /* << Generic Socket Address structure >>  */
+N  U16  sa_family;                 /* Address family                          */
+N  char sa_data[14];               /* Direct address (up to 14 bytes)         */
+N} SOCKADDR;
+N
+N#pragma push
+N#pragma anon_unions
+N
+Ntypedef struct in_addr {          /* << Generic IPv4 Address structure >>    */
+N  union {
+N    struct {
+N      U8 s_b1,s_b2,s_b3,s_b4;     /* IP address, byte access                 */
+N    };
+N    struct {
+N      U16 s_w1,s_w2;              /* IP address, short int access            */
+N    };
+N    U32 s_addr;                   /* IP address in network byte order        */
+N  };
+N} IN_ADDR;
+N#pragma pop
+N
+Ntypedef struct sockaddr_in {      /* << IPv4 Socket Address structure >>     */
+N  S16 sin_family;                 /* Socket domain                           */
+N  U16 sin_port;                   /* Port                                    */
+N  IN_ADDR sin_addr;               /* IP address                              */
+N  S8  sin_zero[8];                /* reserved                                */
+N} SOCKADDR_IN;
+N
+Ntypedef struct hostent {          /* << BSD Host Entry structure >>          */
+N  char *h_name;                   /* Official name of host                   */
+N  char **h_aliases;               /* Pointer to an array of alias names      */
+N  S16  h_addrtype;                /* Address Type: AF_INET, AF_NETBIOS       */
+N  S16  h_length;                  /* Length of address in bytes              */
+N  char **h_addr_list;             /* Pointer to an array of IPv4 addresses   */
+N} HOSTENT;
+N
+Nextern void init_TcpNet (void);
+Nextern BOOL main_TcpNet (void);
+Nextern void timer_tick (void);
+Nextern U8   udp_get_socket (U8 tos, U8 opt, 
+N                            U16 (*listener)(U8 socket, U8 *remip, U16 port, U8 *buf, U16 len));
+Nextern BOOL udp_release_socket (U8 socket);
+Nextern BOOL udp_open (U8 socket, U16 locport);
+Nextern BOOL udp_close (U8 socket);
+Nextern BOOL udp_mcast_ttl (U8 socket, U8 ttl);
+Nextern U8  *udp_get_buf (U16 size);
+Nextern BOOL udp_send (U8 socket, U8 *remip, U16 remport, U8 *buf, U16 dlen);
+Nextern U8   tcp_get_socket (U8 type, U8 tos, U16 tout,
+N                            U16 (*listener)(U8 socket, U8 event, U8 *buf, U16 len));
+Nextern BOOL tcp_release_socket (U8 socket);
+Nextern BOOL tcp_listen (U8 socket, U16 locport);
+Nextern BOOL tcp_connect (U8 socket, U8 *remip, U16 remport, U16 locport);
+Nextern U8  *tcp_get_buf (U16 size);
+Nextern U16  tcp_max_dsize (U8 socket);
+Nextern BOOL tcp_check_send (U8 socket);
+Nextern U8   tcp_get_state (U8 socket);
+Nextern BOOL tcp_send (U8 socket, U8 *buf, U16 dlen);
+Nextern BOOL tcp_close (U8 socket);
+Nextern BOOL tcp_abort (U8 socket);
+Nextern void tcp_reset_window (U8 socket);
+Nextern BOOL arp_cache_ip (U8 *ipadr, U8 type);
+Nextern BOOL arp_cache_mac (U8 *hwadr);
+Nextern void ppp_listen (const char *user, const char *passw);
+Nextern void ppp_connect (const char *dialnum, const char *user, const char *passw);
+Nextern void ppp_close (void);
+Nextern BOOL ppp_is_up (void);
+Nextern void slip_listen (void);
+Nextern void slip_connect (const char *dialnum);
+Nextern void slip_close (void);
+Nextern BOOL slip_is_up (void);
+Nextern U8   get_host_by_name (U8 *hostn, void (*cbfunc)(U8 event, U8 *host_ip));
+Nextern BOOL smtp_connect (U8 *ipadr, U16 port, void (*cbfunc)(U8 event));
+Nextern void dhcp_disable (void);
+Nextern BOOL igmp_join (U8 *group_ip);
+Nextern BOOL igmp_leave (U8 *group_ip);
+Nextern BOOL snmp_trap (U8 *manager_ip, U8 gen_trap, U8 spec_trap, U16 *obj_list);
+Nextern BOOL snmp_set_community (const char *community);
+Nextern BOOL icmp_ping (U8 *remip, void (*cbfunc)(U8 event));
+Nextern BOOL ftpc_connect (U8 *ipadr, U16 port, U8 command, void (*cbfunc)(U8 event));
+Nextern BOOL tftpc_put (U8 *ipadr, U16 port,
+N                       const char *src, const char *dst, void (*cbfunc)(U8 event));
+Nextern BOOL tftpc_get (U8 *ipadr, U16 port, 
+N                       const char *src, const char *dst, void (*cbfunc)(U8 event));
+Nextern BOOL sntp_get_time (U8 *ipadr, void (*cbfunc)(U32 utc_time));
+Nextern void ftp_evt_notify (U8 evt);
+N
+N/* BSD Socket API */
+Nextern int  socket (int family, int type, int protocol);
+Nextern int  bind (int sock, const SOCKADDR *addr, int addrlen);
+Nextern int  listen (int sock, int backlog);
+Nextern int  accept (int sock, SOCKADDR *addr, int *addrlen);
+Nextern int  connect (int sock, SOCKADDR *addr, int addrlen);
+Nextern int  send (int sock, const char *buf, int len, int flags);
+Nextern int  sendto (int sock, const char *buf, int len, int flags, SOCKADDR *to, int tolen);
+Nextern int  recv (int sock, char *buf, int len, int flags);
+Nextern int  recvfrom (int sock, char *buf, int len, int flags, SOCKADDR *from, int *fromlen);
+Nextern int  closesocket (int sock);
+Nextern int  getpeername (int sock, SOCKADDR *name, int *namelen);
+Nextern int  getsockname (int sock, SOCKADDR *name, int *namelen);
+Nextern int  ioctlsocket (int sock, long cmd, unsigned long *argp);
+Nextern HOSTENT *gethostbyname (const char *name, int *err);
+N
+N#ifdef __cplusplus
+S}
+N#endif
+N
+N/*----------------------------------------------------------------------------
+N * end of file
+N *---------------------------------------------------------------------------*/
+N
+N#endif
+N 
+L 16 "..\..\RL-ARM\Config\Net_Config.h" 2
+N
+N/* Definitions */
+N#define ETH_ADRLEN      6         /* Ethernet Address Length in bytes        */
+N#define IP_ADRLEN       4         /* IP Address Length in bytes              */
+N#define OS_HEADER_LEN   4         /* TCPnet 'os_frame' header size           */
+N                                  /* Frame Header length common for all      */
+N#define PHY_HEADER_LEN  (2*ETH_ADRLEN + 2) /* network interfaces.            */
+N#define ETH_MTU         1514      /* Ethernet Frame Max Transfer Unit        */
+N#define PPP_PROT_IP     0x0021    /* PPP Protocol type: IP                   */
+N#define TCP_DEF_WINSIZE 4380      /* TCP default window size                 */
+N#define PASSW_SZ        20        /* Authentication Password Buffer size     */
+N
+N/* Network Interfaces */
+N#define NETIF_ETH       0         /* Network interface: Ethernet             */
+N#define NETIF_PPP       1         /* Network interface: PPP                  */
+N#define NETIF_SLIP      2         /* Network interface: Slip                 */
+N#define NETIF_LOCAL     3         /* Network interface: Localhost (loopback) */
+N#define NETIF_NULL      4         /* Network interface: Null (none)          */
+N
+N/* Telnet Definitions */
+N#define TNET_LBUFSZ     96        /* Command Line buffer size (bytes)        */
+N#define TNET_HISTSZ     128       /* Command History buffer size (bytes)     */
+N#define TNET_FIFOSZ     128       /* Input character Fifo buffer (bytes)     */
+N
+N/* SNMP-MIB Definitions */
+N#define MIB_INTEGER     0x02      /* MIB entry type INTEGER                  */
+N#define MIB_OCTET_STR   0x04      /* MIB entry type OCTET_STRING             */
+N#define MIB_OBJECT_ID   0x06      /* MIB entry type OBJECT_IDENTIFIER        */
+N#define MIB_IP_ADDR     0x40      /* MIB entry type IP ADDRESS (U8[4])       */
+N#define MIB_COUNTER     0x41      /* MIB entry type COUNTER (U32)            */
+N#define MIB_GAUGE       0x42      /* MIB entry type GAUGE (U32)              */
+N#define MIB_TIME_TICKS  0x43      /* MIB entry type TIME_TICKS               */
+N#define MIB_ATR_RO      0x80      /* MIB entry attribute READ_ONLY           */
+N#define MIB_OIDSZ       17        /* Max.size of Object ID value             */
+N#define MIB_STRSZ       110       /* Max.size of Octet String variable       */
+N#define MIB_READ        0         /* MIB entry Read access                   */
+N#define MIB_WRITE       1         /* MIB entry Write access                  */
+N
+N/* SNMP-MIB Macros */
+N#define MIB_STR(s)      sizeof(s)-1, s
+N#define MIB_INT(o)      sizeof(o), (void *)&o
+N#define MIB_IP(ip)      4, (void *)&ip 
+N#define OID0(f,s)       (f*40 + s) 
+N
+N/* Debug Module Definitions */
+N#define MODULE_MEM      0         /* Dynamic Memory Module ID                */
+N#define MODULE_ETH      1         /* Ethernet Module ID                      */
+N#define MODULE_PPP      2         /* PPP Module ID                           */
+N#define MODULE_SLIP     3         /* SLIP Module ID                          */
+N#define MODULE_ARP      4         /* ARP Module ID                           */
+N#define MODULE_IP       5         /* IP Module ID                            */
+N#define MODULE_ICMP     6         /* ICMP Module ID                          */
+N#define MODULE_IGMP     7         /* IGMP Module ID                          */
+N#define MODULE_UDP      8         /* UDP Module ID                           */
+N#define MODULE_TCP      9         /* TCP Module ID                           */
+N#define MODULE_NBNS     10        /* NBNS Module ID                          */
+N#define MODULE_DHCP     11        /* DHCP Module ID                          */
+N#define MODULE_DNS      12        /* DNS Module ID                           */
+N#define MODULE_SNMP     13        /* SNMP Module ID                          */
+N#define MODULE_BSD      14        /* BSD Socket Module ID                    */
+N#define MODULE_HTTP     15        /* HTTP Server Module ID                   */
+N#define MODULE_FTP      16        /* FTP Server Module ID                    */
+N#define MODULE_FTPC     17        /* FTP Client Module ID                    */
+N#define MODULE_TNET     18        /* Telnet Server Module ID                 */
+N#define MODULE_TFTP     19        /* TFTP Server Module ID                   */
+N#define MODULE_TFTPC    20        /* TFTP Client Module ID                   */
+N#define MODULE_SMTP     21        /* SMTP Client Module ID                   */
+N#define MODULE_SNTP     22        /* SNTP Client Module ID                   */
+N
+N/*---------------------------------------------------------------------------*/
+N
+N#ifdef __cplusplus
+Sextern "C"  {
+N#endif
+N
+Ntypedef struct os_frame {         /* << System frame buffer structure >>     */
+N  U16 length;                     /* Total Length of data in frame           */
+N  U16 index;                      /* Buffer Position Index                   */
+N  U8  data[1];                    /* Buffer data (protocol headers + data)   */
+N} OS_FRAME;
+N
+Ntypedef struct arp_info {         /* << ARP Cache Entry info >>              */
+N  U8  State;                      /* ARP Cache entry current state           */
+N  U8  Type;                       /* Cache Entry type                        */
+N  U8  Retries;                    /* Number of Retries left                  */
+N  U8  Tout;                       /* Cache Entry Timeout                     */
+N  U8  HwAdr[ETH_ADRLEN];          /* Ethernet Hardware Address               */
+X  U8  HwAdr[6];           
+N  U8  IpAdr[IP_ADRLEN];           /* Ethernet IP Address                     */
+X  U8  IpAdr[4];            
+N} ARP_INFO;
+N
+Ntypedef struct igmp_info {        /* << IGMP Group info >>                   */
+N  U8  State;                      /* Group membership current state          */
+N  U8  Tout;                       /* Timeout Timer for sending reports       */
+N  U8  Flags;                      /* State machine flags                     */
+N  U8  GrpIpAdr[IP_ADRLEN];        /* Group IP address                        */
+X  U8  GrpIpAdr[4];         
+N} IGMP_INFO;
+N
+Ntypedef struct udp_info {         /* << UDP Socket info >>                   */
+N  U8  State;                      /* UDP Socket entry current state          */
+N  U8  Opt;                        /* UDP Socket Options                      */
+N  U8  Flags;                      /* State machine flags                     */
+N  U8  Tos;                        /* UDP Type of Service                     */
+N  U16 LocPort;                    /* Local UDP port of Socket                */
+N  U8  McastTtl;                   /* MultiCast Time To Live                  */
+N                                  /* Application Event CallBack function     */
+N  U16 (*cb_func)(U8 socket, U8 *rem_ip, U16 port, U8 *buf, U16 len);
+N} UDP_INFO;
+N
+Ntypedef struct tcp_info {         /* << TCP Socket info >>                   */
+N  U8  State;                      /* Socket entry current state              */
+N  U8  Type;                       /* Socket type                             */
+N  U8  Flags;                      /* State machine flags                     */
+N  U8  Tos;                        /* Type of service allocated               */
+N  U8  RemIpAdr[IP_ADRLEN];        /* Remote IP address                       */
+X  U8  RemIpAdr[4];         
+N  U16 RemPort;                    /* Remote TCP port                         */
+N  U16 LocPort;                    /* Local TCP port                          */
+N  U16 MaxSegSize;                 /* Transmit Max. Segment Size              */
+N  U16 Tout;                       /* Socket idle timeout (in seconds)        */
+N  U16 AliveTimer;                 /* Keep Alive timer                        */
+N  U16 RetryTimer;                 /* Retransmission timer                    */
+N  U8  AckTimer;                   /* Receive Delay-ack timer                 */
+N  U8  Id;                         /* Socket identification number            */
+N  U8  Retries;                    /* Number of retries left before aborting  */
+N  U8  DupAcks;                    /* Number of duplicate acks (fast recovery)*/
+N  U32 SendUna;                    /* Send Sequence Number unacknowledged     */
+N  U32 SendNext;                   /* Next Send Sequence Number               */
+N  U32 SendChk;                    /* Check Sequence Number for dupacks       */
+N  U32 SendWl1;                    /* Sequence Number of last Window update   */
+N  U32 SendWl2;                    /* Acknowledge Number of last Window update*/
+N  U16 SendWin;                    /* Current Send Window                     */
+N  S16 RttSa;                      /* Scaled Average for RTT estimator        */
+N  S16 RttSv;                      /* Scaled deViation for RTT estimator      */
+N  U16 CWnd;                       /* Congestion Window                       */
+N  U16 SsThresh;                   /* Slow Start Treshold                     */
+N  U16 RecWin;                     /* Current Receive Window                  */
+N  U32 RecNext;                    /* Next Receive Sequence Number            */
+N  OS_FRAME *unack_list;           /* Unacked queue list                      */
+N                                  /* Application Event-CallBack function     */
+N  U16 (*cb_func)(U8 socket, U8 event, U8 *p1, U16 p2);
+N} TCP_INFO;
+N
+Ntypedef struct bsd_info {         /* << BSD Socket info >>                   */
+N  U8  State;                      /* BSD Socket current state                */
+N  U8  Socket;                     /* Binded TCP/UDP Socket                   */
+N  U8  Flags;                      /* Flags for Socket Option                 */
+N  U8  Type;                       /* Type of Socket (SOCK_DGRAM/SOCK_STREAM) */
+N  U16 LocPort;                    /* Bind local Port                         */
+N  U16 RemPort;                    /* Remote TCP/UDP Port                     */
+N  U32 LocIP;                      /* Bind local IP address (net byte order)  */
+N  U32 RemIP;                      /* Remote IP address     (net byte order)  */
+N  U8  AcceptSock;                 /* Accept Socket list                      */
+N  U8  ParentSock;                 /* Parent (server) socket                  */
+N  U8  Event;                      /* Wait Event flags in RTX environment     */
+N  U8  Task;                       /* Socket Owner Task                       */
+N  U16 Tout;                       /* Receive timer value                     */
+N  void *buf_list;                 /* Rx Data buffer chain                    */
+N} BSD_INFO;
+N
+Ntypedef struct http_info {        /* << HTTP Session info >>                 */
+N  U8  State;                      /* HTTP Session current state              */
+N  U8  Socket;                     /* binded TCP Socket                       */
+N  U16 Flags;                      /* State machine Flags                     */
+N  U8  FType;                      /* File Type: html, jpeg, gif,...          */
+N  U8  PostSt;                     /* POST method Processing Status           */
+N  U16 DelimSz;                    /* Boundary delimiter size                 */
+N  U8  UserId;                     /* User Id (authentication enabled)        */
+N  U32 CGIvar;                     /* CGI session private variable (cgi_func) */
+N  U32 DLen;                       /* Data length (number of bytes to send)   */
+N  U32 Count;                      /* Total number of bytes sent              */
+N  U16 BCnt;                       /* Number of bytes sent in last packet     */
+N  U8  Lang[6];                    /* Selected Web Language: en-us, de, fr .. */
+N  U32 LMDate;                     /* Last Modified Date (UTC format)         */
+N  U8 *Script;                     /* Script Buffer pointer                   */
+N  U8 *pDelim;                     /* Multipart Boundary delimiter value      */
+N  void *sFile;                    /* Script Interpreter File pointer         */
+N  void *dFile;                    /* Data File pointer                       */
+N} HTTP_INFO;
+N
+Ntypedef struct http_file {        /* << HTTP Internal File info >>           */
+N  U32       Id;                   /* File Name Id (CRC32 value of file name) */
+N  const U8 *Start;                /* File Start Address in ROM               */
+N} const HTTP_FILE;
+N
+Ntypedef struct tnet_info {        /* << Telnet Session info >>               */
+N  U8  State;                      /* Telnet Session current state            */
+N  U8  Socket;                     /* binded TCP Socket                       */
+N  U8  Flags;                      /* State machine Flags                     */
+N  U8  BCnt;                       /* Received Data byte count                */
+N  U16 Tout;                       /* Timeout delay counter                   */
+N  U8  UserId;                     /* User Id (authentication enabled)        */
+N  U8  Widx;                       /* Fifo buffer Write index                 */
+N  U8  Ridx;                       /* Fifo buffer Read index                  */
+N  U8  hNext;                      /* History command next position           */
+N  U8  hCurr;                      /* History command current position        */
+N  U32 SVar;                       /* Session private var. (tnet_process_cmd) */
+N  U8  LBuf[TNET_LBUFSZ];          /* Data Line Buffer                        */
+X  U8  LBuf[96];           
+N  U8  Fifo[TNET_FIFOSZ];          /* Fifo Buffer for received line/keycodes  */
+X  U8  Fifo[128];           
+N  U8  Hist[TNET_HISTSZ];          /* Command History buffer                  */
+X  U8  Hist[128];           
+N} TNET_INFO;
+N
+Ntypedef struct tftp_info {        /* << TFTP Session info >>                 */
+N  U8  State;                      /* TFTP Session current state              */
+N  U8  Socket;                     /* binded UDP Data Socket                  */
+N  U8  Flags;                      /* State machine Flags                     */
+N  U8  Retries;                    /* Retry counter                           */
+N  U8  RemIpAdr[IP_ADRLEN];        /* Remote IP address                       */
+X  U8  RemIpAdr[4];         
+N  U16 RemPort;                    /* Remote UDP port (TID)                   */
+N  U16 BlockSz;                    /* Transfer Block size                     */
+N  U16 BlockNr;                    /* Block Number                            */
+N  U8  Timer;                      /* Timeout Timer value                     */
+N  U16 BufLen;                     /* Length of retransmit buffer             */
+N  U8  *Buf;                       /* Transmit/Retransmit buffer              */
+N  void *File;                     /* File Handle pointer                     */
+N} TFTP_INFO;
+N
+Ntypedef struct ftp_info {         /* << FTP Session info >>                  */
+N  U8  State;                      /* FTP Session current state               */
+N  U8  Socket;                     /* binded TCP Control Socket               */
+N  U16 Flags;                      /* State machine Flags                     */
+N  U8  RemIpAdr[IP_ADRLEN];        /* Client IP address                       */
+X  U8  RemIpAdr[4];         
+N  U16 DPort;                      /* TCP Data port (Server or Client)        */
+N  U8  DSocket;                    /* TCP Data Socket                         */
+N  U8  UserId;                     /* User Id (authentication enabled)        */
+N  U8  Resp;                       /* FTP Server Response Code                */
+N  U8  PathLen;                    /* Size of the Path string                 */
+N  U8 *Path;                       /* Current Working Directory               */
+N  U8 *Name;                       /* Absolute File/Folder Path Name          */
+N  void *File;                     /* File Handle pointer                     */
+N} FTP_INFO;
+N
+Ntypedef struct dns_cache {        /* << DNS Cache Entry info >>              */
+N  U32 HostId;                     /* Host Id (CRC32 value of host name)      */
+N  U32 Ttl;                        /* Cache Entry Time To Live                */
+N  U8  IpAdr[IP_ADRLEN];           /* Ethernet IP Address                     */
+X  U8  IpAdr[4];            
+N} DNS_CACHE;
+N
+Ntypedef struct localm {           /* << Local Machine info >>                */
+N  U8  IpAdr[IP_ADRLEN];           /* Local IP Address                        */
+X  U8  IpAdr[4];            
+N  U8  DefGW[IP_ADRLEN];           /* Default GateWay                         */
+X  U8  DefGW[4];            
+N  U8  NetMask[IP_ADRLEN];         /* Net Mask                                */
+X  U8  NetMask[4];          
+N  U8  PriDNS[IP_ADRLEN];          /* Primary DNS Server                      */
+X  U8  PriDNS[4];           
+N  U8  SecDNS[IP_ADRLEN];          /* Secondary DNS Server                    */
+X  U8  SecDNS[4];           
+N} LOCALM;
+N
+Ntypedef struct remotem {          /* << Remote Machine Info >>               */
+N  U8  IpAdr[IP_ADRLEN];           /* Remote IP address                       */
+X  U8  IpAdr[4];            
+N  U8  HwAdr[ETH_ADRLEN];          /* Remote Hardware Address                 */
+X  U8  HwAdr[6];           
+N} REMOTEM;
+N
+Ntypedef struct mib_entry {        /* << SNMP-MIB Entry Info >>               */
+N  U8  Type;                       /* Object Type                             */
+N  U8  OidLen;                     /* Object ID length                        */
+N  U8  Oid[MIB_OIDSZ];             /* Object ID value                         */
+X  U8  Oid[17];              
+N  U8  ValSz;                      /* Size of a Variable                      */
+N  void *Val;                      /* Pointer to a variable                   */
+N  void (*cb_func)(int mode);      /* Write/Read event callback function      */
+N} MIB_ENTRY;
+N
+Ntypedef struct sys_cfg {          /* << SYS Configuration info >>            */
+N  U32 *MemPool;                   /* Dynamic Memory Pool buffer              */
+N  U32 MemSize;                    /* Memory Pool size in bytes               */
+N  U8  TickRate;                   /* Tick Rate in ticks per second           */
+N  U8  TickItv;                    /* Tick Interval in ms                     */
+N  U8  T200ms;                     /* Delay 200 ms in ticks                   */
+N  U8  NetCfg;                     /* Network Interface Configuration flags   */
+N  U8 *HostName;                   /* Local Host Name                         */
+N} const SYS_CFG;
+N
+Ntypedef struct arp_cfg {          /* << ARP Configuration info >>            */
+N  ARP_INFO *Table;                /* Cache Table array                       */
+N  U8  TabSize;                    /* Cache Table size                        */
+N  U8  TimeOut;                    /* Table Entry expiration time in seconds  */
+N  U8  MaxRetry;                   /* Number of Retries to resolve MAC addr.  */
+N  U8  Resend;                     /* Resend Timeout in seconds               */
+N  U8  Notify;                     /* Notify on IP address changes             */
+N} const ARP_CFG;
+N
+Ntypedef struct igmp_cfg {         /* << IGMP Configuration info >>           */
+N  IGMP_INFO *Table;               /* Group Table array                       */
+N  U16 TabSize;                    /* Group Table size                        */
+N} const IGMP_CFG;
+N
+Ntypedef struct dhcp_cfg {         /* << DHCP Configuration info >>           */
+N  U8 *Vcid;                       /* Vendor Class Identifier                 */
+N  U8  Opt;                        /* Extra DHCP option flags                 */
+N} const DHCP_CFG;
+N
+Ntypedef struct ppp_cfg {          /* << PPP Configuration info >>            */
+N  U32 ACCmap;                     /* Async Control Character map             */
+N  U16 SerTout;                    /* Serial Frame Receive Timeout            */
+N  U16 RetryTout;                  /* Retry Timeout in ticks                  */
+N  U16 EchoTout;                   /* LCP Echo Timeout in seconds             */
+N  U8  MaxRetry;                   /* Number of Retries                       */
+N  U8  EnAuth;                     /* Enabled Authentication protocols        */
+N} const PPP_CFG;
+N
+Ntypedef struct udp_cfg {          /* << UDP Configuration info >>            */
+N  UDP_INFO *Scb;                  /* Socket Control Block array              */
+N  U8  NumSocks;                   /* Number of UDP Sockets                   */
+N} const UDP_CFG;
+N
+Ntypedef struct tcp_cfg {          /* << TCP Configuration info >>            */
+N  TCP_INFO *Scb;                  /* Socket Control Block array              */
+N  U8  NumSocks;                   /* Number of TCP Sockets                   */
+N  U8  MaxRetry;                   /* Number of Retries                       */
+N  U16 RetryTout;                  /* Retry Timeout in ticks                  */
+N  U16 T2MSLTout;                  /* Maximum Segment Life Time               */
+N  U16 SynRetryTout;               /* SYN Retry Timeout in ticks              */
+N  U16 InitRetryTout;              /* Initial Retransmit timeout in ticks     */
+N  U16 DefTout;                    /* Default Connect Timeout in seconds      */
+N  U16 MaxSegSize;                 /* Maximum Segment Size value              */
+N  U16 RecWinSize;                 /* Receiving Window Size in bytes          */
+N  U8  ConRetry;                   /* Number of Retries to Connect            */
+N} const TCP_CFG;
+N
+Ntypedef struct http_cfg {         /* << HTTP Configuration info >>           */
+N  HTTP_INFO *Scb;                 /* Session Control Block array             */
+N  U8  NumSess;                    /* Max. Number of Active Sessions          */
+N  U8  EnAuth;                     /* Enable User Authentication              */
+N  U16 PortNum;                    /* Listening Port number                   */
+N  U8 const *SrvId;                /* Server-Id http header                   */
+N  U8 const *Realm;                /* Authentication Realm                    */
+N  U8 const *User;                 /* Authentication User name                */
+N  U8 *Passw;                      /* Authentication Password                 */
+N} const HTTP_CFG;
+N
+Ntypedef struct tnet_cfg {         /* << TNET Configuration info >>           */
+N  TNET_INFO *Scb;                 /* Session Control Block array             */
+N  U8  NumSess;                    /* Max. Number of Active Sessions          */
+N  U8  EnAuth;                     /* Enable User Authentication              */
+N  U8  NoEcho;                     /* Disable Server Echo mode                */
+N  U16 PortNum;                    /* Listening Port number                   */
+N  U16 IdleTout;                   /* Idle Connection timeout in ticks        */
+N  U8 const *User;                 /* Authentication User Name                */
+N  U8 *Passw;                      /* Authentication Password                 */
+N} const TNET_CFG;
+N
+Ntypedef struct tftp_cfg {         /* << TFTP Configuration info >>           */
+N  TFTP_INFO *Scb;                 /* Session Control Block array             */
+N  U8  NumSess;                    /* Max. Number of Active Sessions          */
+N  U8  MaxRetry;                   /* Number of Retries                       */
+N  U16 PortNum;                    /* Listening Port number                   */
+N  U8  DefTout;                    /* Inactive Session Timeout in seconds     */
+N  U8  EnFwall;                    /* Enable Firewall Support                 */
+N} const TFTP_CFG;
+N
+Ntypedef struct tftpc_cfg {        /* << TFTPC Configuration info >>          */
+N  U16 BlockSize;                  /* Transfer Block size                     */
+N  U16 RetryTout;                  /* Retry Timeout in ticks                  */
+N  U8  MaxRetry;                   /* Number of Retries                       */
+N} const TFTPC_CFG;
+N
+Ntypedef struct ftp_cfg {          /* << FTP Configuration info >>            */
+N  FTP_INFO *Scb;                  /* Session Control Block array             */
+N  U8  NumSess;                    /* Max. Number of Active Sessions          */
+N  U8  EnAuth;                     /* Enable User Authentication              */
+N  U16 PortNum;                    /* Listening Port number                   */
+N  U16 IdleTout;                   /* Idle Connection timeout in ticks        */
+N  U8  MsgLen;                     /* Length of welcome message               */
+N  U8 const *Msg;                  /* Server Welcome message                  */ 
+N  U8 const *User;                 /* Authentication User Name                */
+N  U8 *Passw;                      /* Authentication Password                 */
+N} const FTP_CFG;
+N
+Ntypedef struct ftpc_cfg {         /* << FTPC Configuration info >>           */
+N  U8  DefTout;                    /* Default inactivity timeout              */
+N  U8  PasvMode;                   /* FTP Passive Mode used                   */
+N} const FTPC_CFG;
+N
+Ntypedef struct dns_cfg {          /* << DNS Configuration info >>            */
+N  DNS_CACHE *Table;               /* Cache Table array                       */
+N  U8  TabSize;                    /* Cache Table size                        */
+N} const DNS_CFG;
+N
+Ntypedef struct snmp_cfg {         /* << SNMP Configuration info >>           */
+N  U16 PortNum;                    /* Listening Port number                   */
+N  U16 TrapPort;                   /* Trap Port number                        */
+N  U8  TrapIp[IP_ADRLEN];          /* Trap Server IP Address                  */
+X  U8  TrapIp[4];           
+N  U8 const *Community;            /* Community Name                          */
+N  U8  TickItv;                    /* Tick Interval in ticks                  */
+N} const SNMP_CFG;
+N
+Ntypedef struct sntp_cfg {         /* << SNTP Configuration info >>           */
+N  U8  SrvIp[IP_ADRLEN];           /* NTP/SNTP Server IP Address              */
+X  U8  SrvIp[4];            
+N  U8  Bcast;                      /* Broadcast client mode (for LAN only)    */
+N} const SNTP_CFG;
+N
+Ntypedef struct bsd_cfg {          /* << BSD Configuration info >>            */
+N  BSD_INFO *Scb;                  /* Socket Control Block array              */
+N  U8  NumSocks;                   /* Number of BSD Sockets                   */
+N  U8  InRtx;                      /* Running in RTX environment              */
+N  U16 RcvTout;                    /* Blocking recv timeout in ticks          */
+N} const BSD_CFG;
+N
+Ntypedef enum {                    /* << Fatal System Error Codes >>          */
+N  ERR_MEM_ALLOC,                  /* Alloc memory failed, out of memory      */
+N  ERR_MEM_FREE,                   /* Free memory failed, memory slot invalid */
+N  ERR_MEM_CORRUPT,                /* Memory corruption detected              */
+N  ERR_MEM_LOCK,                   /* Locked memory function re-entered error */
+N  ERR_UDP_ALLOC,                  /* No free UDP sockets available           */
+N  ERR_TCP_ALLOC,                  /* No free TCP sockets available           */
+N  ERR_TCP_STATE                   /* TCP socket in undefined state           */
+N} ERROR_CODE;
+N
+N
+N/*----------------------------------------------------------------------------
+N *      Functions
+N *---------------------------------------------------------------------------*/
+N
+N/* Net_Config.c */
+Nextern void init_system (void);
+Nextern void run_system (void);
+Nextern void sys_error (ERROR_CODE code);
+N
+N/* at_Mem.c */
+Nextern OS_FRAME *alloc_mem (U32 byte_size);
+Nextern void free_mem (OS_FRAME *mem_ptr);
+N
+N/* at_Ethernet.c */
+Nextern void eth_init_link (void);
+Nextern void eth_run_link (void);
+Nextern void put_in_queue (OS_FRAME *frame);
+Nextern BOOL eth_send_frame (OS_FRAME *frame);
+Nextern BOOL eth_chk_adr (OS_FRAME *frame);
+Nextern U8  *eth_get_adr (U8 *ipadr);
+N
+N/* at_Ppp.c */
+Nextern void ppp_init_link (void);
+Nextern void ppp_run_link (void);
+Nextern BOOL ppp_send_frame (OS_FRAME *frame, U16 prot);
+N
+N/* at_Ppp_Pap.c */
+Nextern void pap_init (void);
+Nextern void pap_process (OS_FRAME *frame);
+Nextern void pap_run (void);
+N
+N/* at_Ppp_Chap.c */
+Nextern void chap_init (void);
+Nextern void chap_process (OS_FRAME *frame);
+Nextern void chap_run (void);
+N
+N/* at_Slip.c */
+Nextern void slip_init_link (void);
+Nextern void slip_run_link (void);
+Nextern BOOL slip_send_frame (OS_FRAME *frame);
+N
+N/* at_Lib.c */
+Nextern int  mem_copy (void *dp, void *sp, int len);
+Nextern void mem_rcopy (void *dp, void *sp, int len);
+Nextern BOOL mem_comp (void *sp1, void *sp2, int len);
+Nextern void mem_set (void *dp, U8 val, int len);
+Nextern BOOL mem_test (void *sp, U8 val, int len);
+Nextern BOOL str_scomp (U8 *sp, U8 const *cp);
+Nextern int  str_copy (U8 *dp, U8 *sp);
+Nextern void str_up_case (U8 *dp, U8 *sp);
+N
+N/* at_Arp.c */
+Nextern void arp_notify (void);
+Nextern BOOL arp_get_info (REMOTEM *info);
+N
+N/* at_Ip.c */
+Nextern void ip_init (void);
+Nextern void ip_run_local (void);
+N
+N/* at_Dhcp.c */
+Nextern void dhcp_cbfunc (U8 opt, U8 *val, U16 len);
+N
+N/* at_Icmp.c */
+Nextern void icmp_init (void);
+Nextern void icmp_run_engine (void);
+N
+N/* at_Igmp.c */
+Nextern void igmp_init (void);
+Nextern void igmp_run_host (void);
+Nextern void igmp_process (OS_FRAME *frame);
+N
+N/* at_Udp.c */
+Nextern void udp_init (void);
+Nextern void udp_process (OS_FRAME *frame);
+N
+N/* at_Tcp.c */
+Nextern void tcp_init (void);
+Nextern void tcp_poll_sockets (void);
+Nextern void tcp_process (OS_FRAME *frame);
+N
+N/* at_Bsd.c */
+Nextern void bsd_init (void);
+Nextern void bsd_poll_sockets (void);
+Nextern U8   bsd_wait (BSD_INFO *bsd_s, U8 evt);
+Nextern void bsd_enable (BSD_INFO *bsd_s, U8 evt);
+N
+N/* at_Bsd_Host.c */
+Nextern void bsd_init_host (void);
+N
+N/* at_Http.c */
+Nextern void http_init (void);
+Nextern void http_run_server (void);
+Nextern void *http_fopen (U8 *name);
+Nextern void http_fclose (void *file);
+Nextern U16  http_fread (void *file, U8 *buf, U16 len);
+Nextern BOOL http_fgets (void *file, U8 *buf, U16 size);
+Nextern U32  http_finfo (U8 *name);
+Nextern void cgi_process_var (U8 *qstr);
+Nextern void cgi_process_data (U8 code, U8 *dat, U16 len);
+Nextern U16  cgi_func (U8 *env, U8 *buf, U16 buflen, U32 *pcgi);
+Nextern U8  *cgx_content_type (void);
+Nextern U8  *http_encoding (void);
+Nextern BOOL http_accept_host (U8 *rem_ip, U16 rem_port);
+Nextern BOOL http_file_access (U8 *fname, U8 user_id);
+Nextern U8   http_check_account (U8 *user, U8 *passw);
+Nextern U8  *http_get_var (U8 *env, void *ansi, U16 maxlen);
+Nextern U8  *http_get_lang (void);
+Nextern void http_get_info (REMOTEM *info);
+Nextern U8   http_get_session (void);
+Nextern U8   http_get_user_id (void);
+Nextern U8  *http_get_content_type (void);
+Nextern U32  http_date (RL_TIME *time);
+N
+N/* at_Telnet.c */
+Nextern void tnet_init (void);
+Nextern void tnet_run_server (void);
+Nextern U16  tnet_cbfunc (U8 code, U8 *buf, U16 buflen);
+Nextern U16  tnet_process_cmd (U8 *cmd, U8 *buf, U16 buflen, U32 *pvar);
+Nextern BOOL tnet_ccmp (U8 *buf, U8 *cmd);
+Nextern void tnet_set_delay (U16 dly);
+Nextern void tnet_get_info (REMOTEM *info);
+Nextern U8   tnet_get_session (void);
+Nextern U8   tnet_get_user_id (void);
+Nextern BOOL tnet_msg_poll (U8 session);
+Nextern BOOL tnet_accept_host (U8 *rem_ip, U16 rem_port);
+Nextern U8   tnet_check_account (U8 code, U8 *id);
+N
+N/* at_Tftp.c */
+Nextern void tftp_init (void);
+Nextern void tftp_run_server (void);
+Nextern void *tftp_fopen (U8 *fname, U8 *mode);
+Nextern void tftp_fclose (void *file);
+Nextern U16  tftp_fread (void *file, U8 *buf, U16 len);
+Nextern U16  tftp_fwrite (void *file, U8 *buf, U16 len);
+Nextern BOOL tftp_accept_host (U8 *rem_ip, U16 rem_port);
+N
+N/* at_Tftpc.c */
+Nextern void tftpc_init (void);
+Nextern void tftpc_run_client (void);
+Nextern void *tftpc_fopen (U8 *fname, U8 *mode);
+Nextern void tftpc_fclose (void *file);
+Nextern U16  tftpc_fread (void *file, U8 *buf, U16 len);
+Nextern U16  tftpc_fwrite (void *file, U8 *buf, U16 len);
+N
+N/* at_Ftp.c */
+Nextern void ftp_init (void);
+Nextern void ftp_run_server (void);
+Nextern void *ftp_fopen (U8 *fname, U8 *mode);
+Nextern void ftp_fclose (void *file);
+Nextern U16  ftp_fread (void *file, U8 *buf, U16 len);
+Nextern U16  ftp_fwrite (void *file, U8 *buf, U16 len);
+Nextern BOOL ftp_fdelete (U8 *fname);
+Nextern BOOL ftp_frename (U8 *fname, U8 *newn);
+Nextern U16  ftp_ffind (U8 code, U8 *buf, U8 *mask, U16 len);
+Nextern BOOL ftp_accept_host (U8 *rem_ip, U16 rem_port);
+Nextern U8   ftp_check_account (U8 code, U8 *id);
+Nextern U8   ftp_get_user_id (void);
+Nextern BOOL ftp_file_access (U8 *fname, U8 mode, U8 user_id);
+Nextern void ftp_evt_notify (U8 evt);
+N
+N/* at_Ftpc.c */
+Nextern void ftpc_init (void);
+Nextern void ftpc_run_client (void);
+Nextern void *ftpc_fopen (U8 *mode);
+Nextern void ftpc_fclose (void *file);
+Nextern U16  ftpc_fread (void *file, U8 *buf, U16 len);
+Nextern U16  ftpc_fwrite (void *file, U8 *buf, U16 len);
+Nextern U16  ftpc_cbfunc (U8 code, U8 *buf, U16 buflen);
+N
+N/* at_Dhcp.c */
+Nextern void dhcp_init (void);
+Nextern void dhcp_run_client (void);
+N#define init_dhcp   dhcp_init
+N
+N/* at_Nbns.c */
+Nextern void nbns_init (void);
+N
+N/* at_Dns.c */
+Nextern void dns_init (void);
+Nextern void dns_run_client (void);
+Nextern U8   get_host_by_name (U8 *hostn, void (*cbfunc)(U8, U8 *));
+N
+N/* at_Smtp.c */
+Nextern void smtp_init (void);
+Nextern void smtp_run_client (void);
+Nextern U16  smtp_cbfunc (U8 code, U8 *buf, U16 buflen, U32 *pvar);
+Nextern BOOL smtp_accept_auth (U8 *srv_ip);
+N
+N/* at_Snmp.c */
+Nextern void snmp_init (void);
+Nextern void snmp_run_agent (void);
+N
+N/* at_Sntp.c */
+Nextern void sntp_init (void);
+Nextern void sntp_run_client (void);
+N
+N/* Ethernet Device Driver */
+Nextern void init_ethernet (void);
+Nextern void send_frame (OS_FRAME *frame);
+N__weak void poll_ethernet (void);
+Nextern void int_enable_eth (void);
+Nextern void int_disable_eth (void);
+N
+N/* Serial Device Driver */
+Nextern void init_serial (void);
+Nextern int  com_getchar (void);
+Nextern BOOL com_putchar (U8 c);
+Nextern BOOL com_tx_active (void);
+N
+N/* Modem Device Driver */
+Nextern void modem_init (void);
+Nextern void modem_dial (U8 *dialnum);
+Nextern void modem_hangup (void);
+Nextern void modem_listen (void);
+Nextern BOOL modem_online (void);
+Nextern BOOL modem_process (U8 ch);
+Nextern void modem_run (void);
+N
+N#ifdef __cplusplus
+S}
+N#endif
+N
+N/*----------------------------------------------------------------------------
+N * end of file
+N *---------------------------------------------------------------------------*/
+N
+N#endif
+N
+L 13 "..\..\RL-ARM\Config\Net_Debug.c" 2
+N
+N//-------- <<< Use Configuration Wizard in Context Menu >>> -----------------
+N
+N// <q>Print Time Stamp
+N// ===================
+N//   <i> Enable printing the time-info in debug messages
+N#define DBG_TIME       1
+N
+N// <h>TCPnet Debug Definitions
+N// ===========================
+N//   <o>Memory Management Debug <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off Dynamic Memory debug messages
+N#define DBG_MEM        0
+N
+N//   <o>Ethernet Debug <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off Ethernet debug messages
+N#define DBG_ETH        0
+N
+N//   <o>PPP Debug   <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off PPP debug messages
+N#define DBG_PPP        0
+N
+N//   <o>SLIP Debug  <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off SLIP debug messages
+N#define DBG_SLIP       0
+N
+N//   <o>ARP Debug   <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off ARP debug messages
+N#define DBG_ARP        0
+N
+N//   <o>IP Debug    <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off IP debug messages
+N#define DBG_IP         0
+N
+N//   <o>ICMP Debug  <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off ICMP debug messages
+N#define DBG_ICMP       0
+N
+N//   <o>IGMP Debug  <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off IGMP debug messages
+N#define DBG_IGMP       0
+N
+N//   <o>UDP Debug   <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off UDP debug messages
+N#define DBG_UDP        0
+N
+N//   <o>TCP Debug   <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off TCP debug messages
+N#define DBG_TCP        0
+N
+N//   <o>NBNS Debug  <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off NetBIOS Name Service debug messages
+N#define DBG_NBNS       0
+N
+N//   <o>DHCP Debug  <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off Dynamic Host Configuration debug messages
+N#define DBG_DHCP       0
+N
+N//   <o>DNS Debug   <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off Domain Name Service debug messages
+N#define DBG_DNS        0
+N
+N//   <o>SNMP Debug  <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off Simple Network Management debug messages
+N#define DBG_SNMP       0
+N
+N//   <o>SNTP Debug  <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off Simple Network Time debug messages
+N#define DBG_SNTP       0
+N
+N//   <o>BSD Debug   <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off BSD Interface debug messages
+N#define DBG_BSD        0
+N
+N// </h>
+N// <h>Application Debug Definitions
+N// ================================
+N//   <o>HTTP Server Debug <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off Web Server debug messages
+N#define DBG_HTTP       0
+N
+N//   <o>FTP Server Debug <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off FTP Server debug messages
+N#define DBG_FTP        0
+N
+N//   <o>FTP Client Debug <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off FTP Client debug messages
+N#define DBG_FTPC       0
+N
+N//   <o>Telnet Server Debug <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off Telnet Server debug messages
+N#define DBG_TNET       0
+N
+N//   <o>TFTP Server Debug <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off TFTP Server debug messages
+N#define DBG_TFTP       0
+N
+N//   <o>TFTP Client Debug <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off TFTP Client debug messages
+N#define DBG_TFTPC      0
+N
+N//   <o>SMTP Client Debug <0=> Off <1=> Errors only <2=> Full debug
+N//   <i> Turn On/Off SMTP Client debug messages
+N#define DBG_SMTP       0
+N
+N// </h>
+N
+N//------------- <<< end of configuration section >>> -----------------------
+N
+N
+N/*--------------------------- init_debug ------------------------------------*/
+N
+Nvoid init_debug (void) {
+N  /* Add your code to initialize the Debug output. This is usually the  */
+N  /* serial interface. The function is called at TCPnet system startup. */
+N  /* You may need to customize also the 'putchar()' function.           */
+N
+N}
+N
+N
+N/*----------------------------------------------------------------------------
+N *      TCPnet Debug Functions
+N *---------------------------------------------------------------------------*/
+N
+N#define  __NET_DEBUG__
+N
+N#include <Net_lib.c>
+L 1 "..\..\RL-ARM\Config\Net_lib.c" 1
+N/*----------------------------------------------------------------------------
+N *      RL-ARM - TCPnet
+N *----------------------------------------------------------------------------
+N *      Name:    NET_LIB.C
+N *      Purpose: TCPnet System Configuration
+N *      Rev.:    V4.72
+N *----------------------------------------------------------------------------
+N *      This code is part of the RealView Run-Time Library.
+N *      Copyright (c) 2004-2013 KEIL - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#pragma thumb
+N#pragma O3
+N
+N/*----------------------------------------------------------------------------
+N *      Library for Net_Config.c
+N *---------------------------------------------------------------------------*/
+N
+N#ifdef __NET_CONFIG__
+S
+S/* Non-Critical Net_Config.c upgrade */
+S#ifndef HTTP_SRVID
+S #define HTTP_SRVID     ""
+S#endif
+S#ifndef FTP_WELMSG
+S #define FTP_WELMSG     ""
+S#endif
+S#ifndef DHCP_VCID
+S #define DHCP_VCID      ""
+S#endif
+S#ifndef DHCP_BOOTF
+S #define DHCP_BOOTF     0
+S#endif
+S#ifndef DHCP_NTPSRV
+S #define DHCP_NTPSRV    0
+S#endif
+S#ifndef TNET_NOECHO
+S #define TNET_NOECHO    0
+S#endif
+S#ifndef TFTP_ENFWALL
+S #define TFTP_ENFWALL   0
+S#endif
+S#ifndef TCP_MAXSEGSZ
+S #define TCP_MAXSEGSZ   1460
+S#endif
+S#ifndef TCP_RECWINSZ
+S #define TCP_RECWINSZ   TCP_DEF_WINSIZE
+S#endif
+S
+S#define TICK_RATE       (1000 / TICK_INTERVAL)
+S
+S/* Some configuration error checking. */
+S#if !(SLIP_ENABLE || PPP_ENABLE || ETH_ENABLE)
+S #error All network interfaces disabled in configuration
+S#endif
+S
+S#if (SLIP_ENABLE && PPP_ENABLE)
+S #error Both SLIP and PPP interfaces enabled
+S#endif
+S
+S/* Check TCP Socket enable. */
+S#if (!TCP_ENABLE & (BSD_ENABLE | HTTP_ENABLE | TNET_ENABLE | FTP_ENABLE | \
+S                    FTPC_ENABLE | SMTP_ENABLE))
+X#if (!TCP_ENABLE & (BSD_ENABLE | HTTP_ENABLE | TNET_ENABLE | FTP_ENABLE |                     FTPC_ENABLE | SMTP_ENABLE))
+S #error Application needs TCP Sockets enabled
+S#endif
+S
+S/* Check UDP Socket enable */
+S#if (!UDP_ENABLE & (BSD_ENABLE | TFTP_ENABLE | DNS_ENABLE | SNMP_ENABLE | \
+S                    SNTP_ENABLE | ((DHCP_ENABLE | NBNS_ENABLE) & ETH_ENABLE)))
+X#if (!UDP_ENABLE & (BSD_ENABLE | TFTP_ENABLE | DNS_ENABLE | SNMP_ENABLE |                     SNTP_ENABLE | ((DHCP_ENABLE | NBNS_ENABLE) & ETH_ENABLE)))
+S #error Application needs UDP Sockets enabled
+S#endif
+S
+S/* Check number of TCP sockets available. */
+S#define __TCPNS    ((BSD_ENABLE  * BSD_NUMSOCKS)   + \
+S                    (HTTP_ENABLE * HTTP_NUMSESS)   + \
+S                    (TNET_ENABLE * TNET_NUMSESS)   + \
+S                    (FTP_ENABLE  * FTP_NUMSESS*2)  + \
+S                    (FTPC_ENABLE * 2)              + \
+S                    (SMTP_ENABLE * 1))
+X#define __TCPNS    ((BSD_ENABLE  * BSD_NUMSOCKS)   +                     (HTTP_ENABLE * HTTP_NUMSESS)   +                     (TNET_ENABLE * TNET_NUMSESS)   +                     (FTP_ENABLE  * FTP_NUMSESS*2)  +                     (FTPC_ENABLE * 2)              +                     (SMTP_ENABLE * 1))
+S
+S#if (__TCPNS > TCP_NUMSOCKS)
+S #error Number of TCP Sockets too small
+S#endif
+S
+S/* Calculate number of UDP sockets needed for TFTP server. */
+S#if (TFTP_ENFWALL)
+S #define __TFTP_NSOCKS  1
+S#else
+S #define __TFTP_NSOCKS  (1 + TFTP_NUMSESS)
+S#endif
+S
+S/* Check number of UDP sockets available. */
+S#define __UDPNS    ((BSD_ENABLE  * BSD_NUMSOCKS)   + \
+S                    (TFTP_ENABLE * __TFTP_NSOCKS)  + \
+S                    (TFTPC_ENABLE* 1)              + \
+S                    (DNS_ENABLE  * 1)              + \
+S                    (SNMP_ENABLE * 1)              + \
+S                    (SNTP_ENABLE * 1)              + \
+S                    (DHCP_ENABLE * ETH_ENABLE)     + \
+S                    (NBNS_ENABLE * ETH_ENABLE))
+X#define __UDPNS    ((BSD_ENABLE  * BSD_NUMSOCKS)   +                     (TFTP_ENABLE * __TFTP_NSOCKS)  +                     (TFTPC_ENABLE* 1)              +                     (DNS_ENABLE  * 1)              +                     (SNMP_ENABLE * 1)              +                     (SNTP_ENABLE * 1)              +                     (DHCP_ENABLE * ETH_ENABLE)     +                     (NBNS_ENABLE * ETH_ENABLE))
+S
+S#if (__UDPNS > UDP_NUMSOCKS)
+S #error Number of UDP Sockets too small
+S#endif
+S
+S/* Check BSD Server sockets */
+S#if (BSD_ENABLE && (BSD_SRVSOCKS > BSD_NUMSOCKS))
+S #error Number of BSD Server sockets too large
+S#endif
+S
+S/* Check BSD Hostname resolver */
+S#if (BSD_ENABLE && BSD_GETHOSTEN && !DNS_ENABLE)
+S #error BSD Hostname resolver needs DNS enabled
+S#endif
+S
+S/* Check PPP Authentication protocols */
+S#if (PPP_ENABLE && PPP_AUTHEN && !(PPP_PAPEN | PPP_CHAPEN))
+S #error PPP Authentication needs PAP or/and CHAP enabled
+S#endif
+S
+S/* Check Net_Config.c version */
+S#if (TNET_ENABLE && !defined(TNET_IDLETOUT))                     || \
+S    (FTP_ENABLE  && !defined(FTP_IDLETOUT))                      || \
+S    (PPP_ENABLE  && (defined(_ACCM1) || defined(LCP_MAXRETRY)))
+X#if (TNET_ENABLE && !defined(TNET_IDLETOUT))                     ||     (FTP_ENABLE  && !defined(FTP_IDLETOUT))                      ||     (PPP_ENABLE  && (defined(_ACCM1) || defined(LCP_MAXRETRY)))
+S #error Net_Config.c too old, needs update
+S#endif
+S
+S/* Check Maximum Segment Size of TCP Socket */
+S#if (TCP_ENABLE && ((TCP_MAXSEGSZ < 536) || (TCP_MAXSEGSZ > 1460)))
+S #error TCP Maximum Segment Size out of range
+S#endif
+S
+S/* Check Receive Window Size of TCP Socket */
+S#if (TCP_ENABLE && (TCP_RECWINSZ < TCP_MAXSEGSZ))
+S #error TCP Receive Window Size too small
+S#endif
+S
+S/* Check Block Size of TFTP Server */
+S#if (TFTPC_ENABLE && ((TFTPC_BLOCKSZ < 128) || (TFTPC_BLOCKSZ > 1428)))
+S #error TFTP Client Block Size out of range
+S#endif
+S
+S/* Local Machine info */
+SLOCALM const nlocalm[3] = {
+S /* Ethernet: Local IP address */
+S#if (ETH_ENABLE)
+S {{_IP1,_IP2,_IP3,_IP4},
+S  /* Default Gateway IP address */
+S  {_GW1,_GW2,_GW3,_GW4},
+S  /* Subnet IP Mask */
+S  {_MSK1,_MSK2,_MSK3,_MSK4},
+S  /* Primary DNS Server IP */
+S  {_pDNS1,_pDNS2,_pDNS3,_pDNS4},
+S  /* Secondary DNS Server IP */
+S  {_sDNS1,_sDNS2,_sDNS3,_sDNS4}},
+S#else
+S {{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}},
+S#endif
+S /* PPP: Local IP address */
+S#if (PPP_ENABLE)
+S {{_IP1P,_IP2P,_IP3P,_IP4P},
+S  /* Default Gateway IP address */
+S  {0,0,0,0},
+S  /* Subnet IP Mask */
+S  {_MSK1P,_MSK2P,_MSK3P,_MSK4P},
+S  /* Primary DNS Server IP */
+S  {_pDNS1P,_pDNS2P,_pDNS3P,_pDNS4P},
+S  /* Secondary DNS Server IP */
+S  {_sDNS1P,_sDNS2P,_sDNS3P,_sDNS4P}},
+S#else
+S {{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}},
+S#endif
+S /* SLIP: Local IP address */
+S#if (SLIP_ENABLE)
+S {{_IP1S,_IP2S,_IP3S,_IP4S},
+S  /* Default Gateway IP address */
+S  {0,0,0,0},
+S  /* Subnet IP Mask */
+S  {_MSK1S,_MSK2S,_MSK3S,_MSK4S},
+S  /* Primary DNS Server IP */
+S  {_pDNS1S,_pDNS2S,_pDNS3S,_pDNS4S},
+S  /* Secondary DNS Server IP */
+S  {_sDNS1S,_sDNS2S,_sDNS3S,_sDNS4S}}
+S#else
+S {{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}},
+S#endif
+S};
+S/* System configuration */
+Sstatic U32 mem_pool[MEM_SIZE];
+S       U8  lhost_name[16] = LHOST_NAME;
+SSYS_CFG sys_config = {
+S  mem_pool,
+S  sizeof (mem_pool),
+S  TICK_RATE,
+S  TICK_INTERVAL,
+S  TICK_RATE / 5,
+S  (PPP_GETIP<<5   | SLIP_DEFGW<<4 | PPP_DEFGW<<3 |
+S   SLIP_ENABLE<<2 | PPP_ENABLE<<1 | ETH_ENABLE),
+S  lhost_name
+S};
+S/* Ethernet network interface */
+S#if (ETH_ENABLE)
+S static ARP_INFO arp_table[ARP_TABSIZE];
+S U8     own_hw_adr[ETH_ADRLEN] = {_MAC1,_MAC2,_MAC3,_MAC4,_MAC5,_MAC6};
+S ARP_CFG arp_config = {
+S   arp_table,
+S   ARP_TABSIZE,
+S   ARP_TIMEOUT,
+S   ARP_MAXRETRY,
+S   ARP_RESEND,
+S   ARP_NOTIFY
+S };
+S#endif
+S#if (PPP_ENABLE)
+S PPP_CFG ppp_config = {
+S   PPP_ACCM,
+S   5 * TICK_RATE,
+S   PPP_RETRYTOUT * TICK_RATE,
+S   PPP_ECHOTOUT,
+S   PPP_MAXRETRY,
+S   ((PPP_CHAPEN << 1) | PPP_PAPEN) * PPP_AUTHEN
+S };
+S#endif
+S#if (SLIP_ENABLE)
+S U16 const slip_SerTout  = 5 * TICK_RATE;
+S#endif
+S#if (ETH_ENABLE && IGMP_ENABLE)
+S static IGMP_INFO igmp_table[IGMP_TABSIZE];
+S IGMP_CFG  igmp_config = {
+S   igmp_table,
+S   IGMP_TABSIZE,
+S };
+S#endif
+S#if (ETH_ENABLE && DHCP_ENABLE)
+S DHCP_CFG dhcp_config = {
+S   DHCP_VCID,
+S   (DHCP_NTPSRV << 1) | DHCP_BOOTF
+S };
+S#endif
+S#if (UDP_ENABLE)
+S static UDP_INFO udp_scb[UDP_NUMSOCKS];
+S UDP_CFG udp_config = {
+S   udp_scb,
+S   UDP_NUMSOCKS,
+S };
+S#endif
+S#if (TCP_ENABLE)
+S static TCP_INFO tcp_scb[TCP_NUMSOCKS];
+S TCP_CFG tcp_config = {
+S   tcp_scb,
+S   TCP_NUMSOCKS,
+S   TCP_MAXRETRY,
+S   TCP_RETRYTOUT * TICK_RATE,
+S   (200 + TICK_INTERVAL - 1) / TICK_INTERVAL,
+S   TCP_SYN_RETRY_TOUT * TICK_RATE,
+S   TCP_INIT_RETRY_TOUT * TICK_RATE,
+S   TCP_DEFTOUT,
+S   TCP_MAXSEGSZ,
+S   TCP_RECWINSZ,
+S   TCP_CONRETRY
+S };
+S#endif
+S#if (HTTP_ENABLE)
+S static HTTP_INFO http_scb[HTTP_NUMSESS];
+S static U8 http_passw[PASSW_SZ] = HTTP_AUTHPASSW;
+S HTTP_CFG  http_config = {
+S   http_scb,
+S   HTTP_NUMSESS,
+S   HTTP_ENAUTH,
+S   HTTP_PORTNUM,
+S   HTTP_SRVID,
+S #if (HTTP_ENAUTH)
+S   HTTP_AUTHREALM,
+S   HTTP_AUTHUSER,
+S   http_passw
+S #else
+S   "","",""
+S #endif
+S };
+S#endif
+S#if (TNET_ENABLE)
+S static TNET_INFO tnet_scb[TNET_NUMSESS];
+S static U8 tnet_passw[PASSW_SZ] = TNET_AUTHPASSW;
+S TNET_CFG  tnet_config = {
+S   tnet_scb,
+S   TNET_NUMSESS,
+S   TNET_ENAUTH,
+S   TNET_NOECHO,
+S   TNET_PORTNUM,
+S   TNET_IDLETOUT,
+S #if (TNET_ENAUTH)
+S   TNET_AUTHUSER,
+S   tnet_passw
+S #else
+S   "",""
+S #endif
+S };
+S#endif
+S#if (TFTP_ENABLE)
+S static TFTP_INFO tftp_scb[TFTP_NUMSESS];
+S TFTP_CFG tftp_config = {
+S   &tftp_scb[0],
+S   TFTP_NUMSESS,
+S   TFTP_MAXRETRY,
+S   TFTP_PORTNUM,
+S   TFTP_DEFTOUT,
+S   TFTP_ENFWALL
+S };
+S#endif
+S#if (TFTPC_ENABLE)
+S TFTPC_CFG tftpc_config = {
+S   TFTPC_BLOCKSZ,
+S   (TFTPC_RETRYTO * TICK_RATE + 5) / 10,
+S   TFTPC_MAXRETRY
+S };
+S#endif
+S#if (FTP_ENABLE)
+S static FTP_INFO ftp_scb[FTP_NUMSESS];
+S static U8 ftp_passw[PASSW_SZ] = FTP_AUTHPASSW;
+S #define _LS(s)  sizeof(s)-1,s
+S FTP_CFG ftp_config = {
+S   ftp_scb,
+S   FTP_NUMSESS,
+S   FTP_ENAUTH,
+S   FTP_PORTNUM,
+S   FTP_IDLETOUT,
+S  _LS(FTP_WELMSG),
+S #if (FTP_ENAUTH)
+S   FTP_AUTHUSER,
+S   ftp_passw
+S #else
+S   "",""
+S #endif
+S };
+S#endif
+S#if (FTPC_ENABLE)
+S FTPC_CFG ftpc_config = {
+S   FTPC_DEFTOUT,
+S   FTPC_PASVMODE
+S };
+S#endif
+S#if (DNS_ENABLE)
+S static DNS_CACHE dns_table[DNS_TABSIZE];
+SDNS_CFG dns_config = {
+S   dns_table,
+S   DNS_TABSIZE
+S };
+S#endif
+S#if (SMTP_ENABLE)
+S U8 const smtp_DefTout = SMTP_DEFTOUT;
+S#endif
+S#if (SNMP_ENABLE)
+S SNMP_CFG snmp_config = {
+S   SNMP_PORTNUM,
+S   SNMP_TRAPPORT,
+S   { SNMP_TRAPIP1, SNMP_TRAPIP2, SNMP_TRAPIP3, SNMP_TRAPIP4 },
+S   SNMP_COMMUNITY,
+S   TICK_INTERVAL / 5
+S };
+S#endif
+S#if (SNTP_ENABLE)
+S SNTP_CFG sntp_config = {
+S { SNTP_SRVIP1, SNTP_SRVIP2, SNTP_SRVIP3, SNTP_SRVIP4 },
+S SNTP_BCMODE
+S };
+S#endif
+S#if (BSD_ENABLE) 
+S static BSD_INFO bsd_scb[BSD_NUMSOCKS + BSD_SRVSOCKS];
+S #ifdef __RTX
+S  static OS_MUT bsd_mutex;
+S  #define BSD_INRTX  __TRUE
+S #else
+S  #define BSD_INRTX  __FALSE
+S #endif
+S BSD_CFG bsd_config = {
+S   bsd_scb,
+S   BSD_NUMSOCKS + BSD_SRVSOCKS,
+S   BSD_INRTX,
+S   BSD_RCVTOUT * TICK_RATE
+S };
+S#endif
+S
+S/*----------------------------------------------------------------------------
+S *      Library Interface
+S *---------------------------------------------------------------------------*/
+S
+S
+S/*--------------------------- init_system -----------------------------------*/
+S
+Svoid init_system (void) {
+S  /* Initialize configured interfaces and applications. */
+S
+S#if (ETH_ENABLE)
+S  eth_init_link ();
+S#endif
+S#if (PPP_ENABLE)
+S  ppp_init_link ();
+S#endif
+S#if (SLIP_ENABLE)
+S  slip_init_link ();
+S#endif
+S  ip_init ();
+S  icmp_init ();
+S#if (ETH_ENABLE && IGMP_ENABLE)
+S  igmp_init ();
+S#endif
+S#if (UDP_ENABLE)
+S  udp_init ();
+S#endif
+S#if (TCP_ENABLE)
+S  tcp_init ();
+S#endif
+S#if (BSD_ENABLE)
+S  bsd_init ();
+S #if (BSD_GETHOSTEN)
+S  bsd_init_host ();
+S #endif
+S#endif
+S#if (HTTP_ENABLE)
+S  http_init ();
+S#endif
+S#if (TNET_ENABLE)
+S  tnet_init ();
+S#endif
+S#if (TFTP_ENABLE)
+S  tftp_init ();
+S#endif
+S#if (TFTPC_ENABLE)
+S  tftpc_init ();
+S#endif
+S#if (FTP_ENABLE)
+S  ftp_init ();
+S#endif
+S#if (FTPC_ENABLE)
+S  ftpc_init ();
+S#endif
+S#if (ETH_ENABLE && NBNS_ENABLE)
+S  nbns_init ();
+S#endif
+S#if (ETH_ENABLE && DHCP_ENABLE)
+S  dhcp_init ();
+S#elif (ETH_ENABLE)
+S  arp_notify ();
+S#endif
+S#if (DNS_ENABLE)
+S  dns_init ();
+S#endif
+S#if (SMTP_ENABLE)
+S  smtp_init ();
+S#endif
+S#if (SNMP_ENABLE)
+S  snmp_init ();
+S#endif
+S#if (SNTP_ENABLE)
+S  sntp_init ();
+S#endif
+S
+S#if (BSD_ENABLE && __RTX)
+S  os_mut_init (bsd_mutex);
+S#endif
+S}
+S
+S
+S/*--------------------------- run_system ------------------------------------*/
+S
+Svoid run_system (void) {
+S  /* Run configured interfaces and applications. */
+S
+S#if (BSD_ENABLE && __RTX)
+S  os_mut_wait (bsd_mutex, 0xFFFF);
+S#endif
+S
+S#if (ETH_ENABLE)
+S  eth_run_link ();
+S#endif
+S#if (PPP_ENABLE)
+S  ppp_run_link ();
+S#endif
+S#if (SLIP_ENABLE)
+S  slip_run_link ();
+S#endif
+S  ip_run_local ();
+S  icmp_run_engine ();
+S#if (ETH_ENABLE && IGMP_ENABLE)
+S  igmp_run_host ();
+S#endif
+S#if (TCP_ENABLE)
+S  tcp_poll_sockets ();
+S#endif
+S#if (BSD_ENABLE)
+S  bsd_poll_sockets ();
+S#endif
+S#if (HTTP_ENABLE)
+S  http_run_server ();
+S#endif
+S#if (TNET_ENABLE)
+S  tnet_run_server ();
+S#endif
+S#if (TFTP_ENABLE)
+S  tftp_run_server ();
+S#endif
+S#if (TFTPC_ENABLE)
+S  tftpc_run_client ();
+S#endif
+S#if (FTP_ENABLE)
+S  ftp_run_server ();
+S#endif
+S#if (FTPC_ENABLE)
+S  ftpc_run_client ();
+S#endif
+S#if (ETH_ENABLE && DHCP_ENABLE)
+S  dhcp_run_client ();
+S#endif
+S#if (DNS_ENABLE)
+S  dns_run_client ();
+S#endif
+S#if (SMTP_ENABLE)
+S  smtp_run_client ();
+S#endif
+S#if (SNMP_ENABLE)
+S  snmp_run_agent ();
+S#endif
+S#if (SNTP_ENABLE)
+S  sntp_run_client ();
+S#endif
+S
+S#if (BSD_ENABLE && __RTX)
+S  os_mut_release (bsd_mutex);
+S#endif
+S}
+S
+S
+S/*--------------------------- bsd_suspend/resume ----------------------------*/
+S
+S#if (BSD_ENABLE && __RTX)
+S__used void bsd_suspend (U8 *tsk_id) {
+S  /* Suspend a socket owner task. */
+S  *tsk_id = (U8)os_tsk_self ();
+S  os_mut_release (bsd_mutex);
+S  os_evt_wait_or (0x8000, 0xFFFF);
+S  os_mut_wait (bsd_mutex, 0xFFFF);
+S}
+S
+S__used void bsd_resume (U8 tsk_id) {
+S  /* Resume a task waiting for a socket event. */
+S  if (tsk_id) {
+S    os_evt_set (0x8000, tsk_id);
+S  }
+S}
+S#endif
+S
+S
+S/*--------------------------- bsd_lock/unlock -------------------------------*/
+S
+S#if (BSD_ENABLE && __RTX)
+S__used void bsd_lock (void) {
+S  /* Acquire mutex - Lock TCPnet functions. */
+S  os_mut_wait (bsd_mutex, 0xFFFF);
+S}
+S
+S__used void bsd_unlock (void) {
+S  /* Release mutex - Unlock TCPnet functions. */
+S  os_mut_release (bsd_mutex);
+S}
+S#endif
+S
+S
+S/*--------------------------- size optimization -----------------------------*/
+S
+S#if !(ETH_ENABLE)
+S/* Empty functions when Ethernet Interface is disabled. */
+SBOOL eth_chk_adr (OS_FRAME *frame)   { return (__FALSE); }
+SU8  *eth_get_adr (U8 *ipadr)         { return (NULL); }
+SBOOL eth_send_frame (OS_FRAME *frame){ return (__FALSE); }
+S#endif
+S
+S#if !(ETH_ENABLE && IGMP_ENABLE)
+S/* Empty functions when IP Multicasting is not enabled. */
+SBOOL igmp_is_member (U8 *ipadr)      { return (__FALSE); }
+Svoid igmp_process (OS_FRAME *frame)  { ; }
+S#endif
+S
+S#if (ETH_ENABLE && !DHCP_ENABLE)
+S/* Empty function when DHCP not enabled. */
+Svoid dhcp_disable (void)             { ; }
+S#endif
+S
+S#if !(PPP_ENABLE)
+S/* Empty function when PPP Interface is disabled. */
+SBOOL ppp_send_frame (OS_FRAME *frame, U16 prot) { return (__FALSE); }
+S#endif
+S
+S#if (PPP_ENABLE && !(PPP_AUTHEN && PPP_PAPEN))
+S/* Empty functions when PAP authentication not enabled. */
+Svoid pap_init (void)                 { ; }
+Svoid pap_run (void)                  { ; }
+Svoid pap_process (OS_FRAME *frame)   { ; }
+S#endif
+S
+S#if (PPP_ENABLE && !(PPP_AUTHEN && PPP_CHAPEN))
+S/* Empty functions when CHAP authentication not enabled. */
+Svoid chap_init (void)                { ; }
+Svoid chap_run (void)                 { ; }
+Svoid chap_process (OS_FRAME *frame)  { ; }
+S#endif
+S
+S#if !(SLIP_ENABLE)
+S/* Empty function when SLIP Interface is disabled. */
+SBOOL slip_send_frame (OS_FRAME *frame) { return (__FALSE); }
+S#endif
+S
+S#if !(UDP_ENABLE)
+S/* Empty function when UDP socket not enabled. */
+Svoid udp_process (OS_FRAME *frame)   { ; }
+S#endif
+S
+S#if !(TCP_ENABLE)
+S/* Empty function when TCP socket not enabled. */
+Svoid tcp_process (OS_FRAME *frame)   { ; }
+S#endif
+S
+S#if !(SNTP_ENABLE)
+S/* Empty function when SNTP not enabled. */
+SBOOL sntp_get_time (U8 *ipadr, void (*cbfunc)(U32)) { return(__FALSE); }
+S#endif
+S
+S#if (BSD_ENABLE && !__RTX)
+S/* Empty functions for non RTX environment. */
+S__used U8   bsd_wait   (BSD_INFO *bsd_s, U8 evt) { return (0);}
+S__used void bsd_enable (BSD_INFO *bsd_s, U8 evt) { ; }
+S#endif
+S
+N#endif    /* __NET_CONFIG__ */
+N
+N
+N/*----------------------------------------------------------------------------
+N *      Library for Net_Debug.c
+N *---------------------------------------------------------------------------*/
+N
+N#ifdef __NET_DEBUG__
+N
+N/* Non-Critical Net_Debug.c upgrade */
+N#ifndef DBG_TIME
+S #define DBG_TIME   1
+N#endif
+N#ifdef DBG_APP
+S #define DBG_HTTP   DBG_APP
+S #define DBG_FTP    DBG_APP
+S #define DBG_FTPC   DBG_APP
+S #define DBG_TNET   DBG_APP
+S #define DBG_TFTP   DBG_APP
+S #define DBG_TFTPC  DBG_APP
+S #define DBG_SMTP   DBG_APP
+N#endif
+N
+N#include <stdarg.h>
+L 1 "C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h" 1
+N/* stdarg.h: ANSI 'C' (X3J11 Oct 88) library header, section 4.8 */
+N/* Copyright (C) Codemist Ltd., 1988                            */
+N/* Copyright (C) ARM Ltd., 1991-1999. All rights reserved */
+N
+N/*
+N * RCS $Revision: 190986 $
+N * Checkin $Date: 2015-02-04 14:26:49 +0000 (Wed, 04 Feb 2015) $
+N * Revising $Author: agrant $
+N */
+N
+N#ifndef __stdarg_h
+N#define __stdarg_h
+N#define __ARMCLIB_VERSION 5060002
+N
+N  #ifndef __STDARG_DECLS
+N  #define __STDARG_DECLS
+N
+N    #undef __CLIBNS
+N
+N    #ifdef __cplusplus
+S      namespace std {
+S          #define __CLIBNS ::std::
+S          extern "C" {
+N    #else
+N      #define __CLIBNS
+N    #endif  /* __cplusplus */
+N
+N/*
+N * stdarg.h declares a type and defines macros for advancing through a
+N * list of arguments whose number and types are not known to the called
+N * function when it is translated. A function may be called with a variable
+N * number of arguments of differing types. Its parameter list contains one or
+N * more parameters. The rightmost parameter plays a special role in the access
+N * mechanism, and will be called parmN in this description.
+N */
+N
+N/* N.B. <stdio.h> is required to declare vfprintf() without defining      */
+N/* va_list.  Clearly the type __va_list there must keep in step.          */
+N#ifdef __clang__
+S  typedef __builtin_va_list va_list;
+S  #define va_start(ap, param) __builtin_va_start(ap, param)
+S  #define va_end(ap)          __builtin_va_end(ap)
+S  #define va_arg(ap, type)    __builtin_va_arg(ap, type)
+S  #if __STDC_VERSION__ >= 199900L || __cplusplus >= 201103L || !defined(__STRICT_ANSI__)
+S  #define va_copy(dest, src)  __builtin_va_copy(dest, src)
+S  #endif
+N#else
+N  #ifdef __TARGET_ARCH_AARCH64
+S    typedef struct __va_list {
+S      void *__stack;
+S      void *__gr_top;
+S      void *__vr_top;
+S      int __gr_offs;
+S      int __vr_offs;
+S    } va_list;
+N  #else
+N    typedef struct __va_list { void *__ap; } va_list;
+N  #endif
+N   /*
+N    * an array type suitable for holding information needed by the macro va_arg
+N    * and the function va_end. The called function shall declare a variable
+N    * (referred to as ap) having type va_list. The variable ap may be passed as
+N    * an argument to another function.
+N    * Note: va_list is an array type so that when an object of that type
+N    * is passed as an argument it gets passed by reference.
+N    */
+N  #define va_start(ap, parmN) __va_start(ap, parmN)
+N
+N   /*
+N    * The va_start macro shall be executed before any access to the unnamed
+N    * arguments. The parameter ap points to an object that has type va_list.
+N    * The va_start macro initialises ap for subsequent use by va_arg and
+N    * va_end. The parameter parmN is the identifier of the rightmost parameter
+N    * in the variable parameter list in the function definition (the one just
+N    * before the '...'). If the parameter parmN is declared with the register
+N    * storage class an error is given.
+N    * If parmN is a narrow type (char, short, float) an error is given in
+N    * strict ANSI mode, or a warning otherwise.
+N    * Returns: no value.
+N    */
+N  #define va_arg(ap, type) __va_arg(ap, type)
+N
+N   /*
+N    * The va_arg macro expands to an expression that has the type and value of
+N    * the next argument in the call. The parameter ap shall be the same as the
+N    * va_list ap initialised by va_start. Each invocation of va_arg modifies
+N    * ap so that successive arguments are returned in turn. The parameter
+N    * 'type' is a type name such that the type of a pointer to an object that
+N    * has the specified type can be obtained simply by postfixing a * to
+N    * 'type'. If type is a narrow type, an error is given in strict ANSI
+N    * mode, or a warning otherwise. If the type is an array or function type,
+N    * an error is given.
+N    * In non-strict ANSI mode, 'type' is allowed to be any expression.
+N    * Returns: The first invocation of the va_arg macro after that of the
+N    *          va_start macro returns the value of the argument after that
+N    *          specified by parmN. Successive invocations return the values of
+N    *          the remaining arguments in succession.
+N    *          The result is cast to 'type', even if 'type' is narrow.
+N    */
+N
+N#define __va_copy(dest, src) ((void)((dest) = (src)))
+N
+N#if !defined(__STRICT_ANSI__) || (defined(__STDC_VERSION__) && 199901L <= __STDC_VERSION__) || (defined(__cplusplus) && 201103L <= __cplusplus)
+X#if !0L || (1L && 199901L <= 199409L) || (0L && 201103L <= __cplusplus)
+N   /* va_copy is in C99 and non-strict C90 and non-strict C++
+N    * __va_copy is always present.
+N    */
+N  #define va_copy(dest, src) ((void)((dest) = (src)))
+N
+N   /* The va_copy macro makes the va_list dest be a copy of
+N    * the va_list src, as if the va_start macro had been applied
+N    * to it followed by the same sequence of uses of the va_arg
+N    * macro as had previously been used to reach the present state
+N    * of src.
+N    */
+N#endif
+N
+N#define va_end(ap) __va_end(ap)
+N   /*
+N    * The va_end macro facilitates a normal return from the function whose
+N    * variable argument list was referenced by the expansion of va_start that
+N    * initialised the va_list ap. If the va_end macro is not invoked before
+N    * the return, the behaviour is undefined.
+N    * Returns: no value.
+N    */
+N#endif /* __clang__ */
+N
+N    #ifdef __cplusplus
+S         }  /* extern "C" */
+S      }  /* namespace std */
+N    #endif /* __cplusplus */
+N
+N    #ifdef __GNUC__
+S     /* be cooperative with glibc */
+S     typedef __CLIBNS va_list __gnuc_va_list;
+S     #define __GNUC_VA_LIST
+S     #undef __need___va_list
+N    #endif
+N
+N  #endif /* __STDARG_DECLS */
+N
+N  #ifdef __cplusplus
+S    #ifndef __STDARG_NO_EXPORTS
+S      using ::std::va_list;
+S    #endif
+N  #endif /* __cplusplus */
+N#endif
+N
+N/* end of stdarg.h */
+N
+L 657 "..\..\RL-ARM\Config\Net_lib.c" 2
+N#include <stdio.h>
+L 1 "C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h" 1
+N/* stdio.h: ANSI 'C' (X3J11 Oct 88) library header, section 4.9 */
+N/* Copyright (C) Codemist Ltd., 1988-1993                       */
+N/* Copyright 1991-1998 ARM Limited. All rights reserved.        */
+N
+N/*
+N * RCS $Revision: 192842 $
+N * Checkin $Date: 2015-04-28 10:58:32 +0100 (Tue, 28 Apr 2015) $
+N * Revising $Author: sdouglas $
+N */
+N
+N/*
+N * stdio.h declares two types, several macros, and many functions for
+N * performing input and output. For a discussion on Streams and Files
+N * refer to sections 4.9.2 and 4.9.3 in the above ANSI draft, or to a
+N * modern textbook on C.
+N */
+N
+N#ifndef __stdio_h
+N#define __stdio_h
+N#define __ARMCLIB_VERSION 5060002
+N
+N/*
+N * Depending on compiler version __int64 or __INT64_TYPE__ should be defined.
+N */
+N#ifndef __int64
+N  #ifdef __INT64_TYPE__
+S    #define __int64 __INT64_TYPE__
+N  #endif
+N  /* On some architectures neither of these may be defined - if so, fall
+N     through and error out if used. */
+N#endif
+N
+N
+N#define _ARMABI __declspec(__nothrow)
+N
+N  #ifndef __STDIO_DECLS
+N  #define __STDIO_DECLS
+N
+N    #undef __CLIBNS
+N    #ifdef __cplusplus
+S      namespace std {
+S      #define __CLIBNS ::std::
+S        extern "C" {
+N    #else /* ndef __cplusplus */
+N      #define __CLIBNS
+N    #endif /* ndef __cplusplus */
+N
+N#if defined(__cplusplus) || !defined(__STRICT_ANSI__) || !defined(__size_t)
+X#if 0L || !0L || !1L
+N /* always defined in C++ and non-strict C for consistency of debug info */
+N  #if __sizeof_ptr == 8
+X  #if 4 == 8
+S    typedef unsigned long size_t;   /* see <stddef.h> */
+N  #else
+N    typedef unsigned int size_t;   /* see <stddef.h> */
+N  #endif
+N  #if !defined(__cplusplus) && defined(__STRICT_ANSI__)
+X  #if !0L && 0L
+S    #define __size_t 1
+N  #endif
+N#endif
+N
+N#undef NULL
+N#define NULL 0                   /* see <stddef.h> */
+N
+N/* ANSI forbids va_list to be defined here */
+N/* keep in step with <stdarg.h> and <wchar.h> */
+N#if !defined(__va_list) && (defined(__cplusplus) || !defined(__STRICT_ANSI__) || !defined(__va_list_defined))
+X#if !0L && (0L || !0L || !0L)
+N/* always defined in C++ and non-strict C for consistency of debug info */
+N  #ifdef __clang__
+S    typedef __builtin_va_list __va_list;
+N  #else
+N    typedef struct __va_list __va_list;
+N  #endif
+N  #if !defined(__cplusplus) && defined(__STRICT_ANSI__)
+X  #if !0L && 0L
+S    #define __va_list_defined 1
+N  #endif
+N#endif
+N
+N   /*
+N    * If the compiler supports signalling nans as per N965 then it
+N    * will define __SUPPORT_SNAN__, in which case a user may define
+N    * _WANT_SNAN in order to obtain compliant versions of the printf
+N    * and scanf families of functions
+N    */
+N#if defined(__SUPPORT_SNAN__) && defined(_WANT_SNAN)
+X#if 0L && 0L
+S#pragma import(__use_snan)
+N#endif
+N
+Ntypedef struct __fpos_t_struct {
+N    unsigned __int64 __pos;
+N    /*
+N     * this structure is equivalent to an mbstate_t, but we're not
+N     * allowed to actually define the type name `mbstate_t' within
+N     * stdio.h
+N     */
+N    struct {
+N        unsigned int __state1, __state2;
+N    } __mbstate;
+N} fpos_t;
+N   /*
+N    * fpos_t is an object capable of recording all information needed to
+N    * specify uniquely every position within a file.
+N    */
+N
+N#define _SYS_OPEN 16
+N   /* _SYS_OPEN defines a limit on the number of open files that is imposed
+N    * by this C library
+N    */
+N
+Ntypedef struct __FILE FILE;
+N   /*
+N    * FILE is an object capable of recording all information needed to control
+N    * a stream, such as its file position indicator, a pointer to its
+N    * associated buffer, an error indicator that records whether a read/write
+N    * error has occurred and an end-of-file indicator that records whether the
+N    * end-of-file has been reached.
+N    * Its structure is not made known to library clients.
+N    */
+N
+N#if defined(__STRICT_ANSI__) && !__FILE_INCOMPLETE
+X#if 0L && !__FILE_INCOMPLETE
+Sstruct __FILE {
+S    union {
+S        long __FILE_alignment;
+S#ifdef __TARGET_ARCH_AARCH64
+S        char __FILE_size[136];
+S#else /* __TARGET_ARCH_AARCH64 */
+S        char __FILE_size[84];
+S#endif /* __TARGET_ARCH_AARCH64 */
+S    } __FILE_opaque;
+S};
+S    /*
+S     * FILE must be an object type (C99 - 7.19.1) and an object type fully
+S     * describes an object [including its static size] (C99 - 6.2.5).
+S     * This definition is a placeholder which matches the struct __FILE in
+S     * size and alignment as used internally by libc.
+S     */
+N#endif
+N
+N
+Nextern FILE __stdin, __stdout, __stderr;
+Nextern FILE *__aeabi_stdin, *__aeabi_stdout, *__aeabi_stderr;
+N
+N#if _AEABI_PORTABILITY_LEVEL != 0 || (!defined _AEABI_PORTABILITY_LEVEL && __DEFAULT_AEABI_PORTABILITY_LEVEL != 0)
+X#if _AEABI_PORTABILITY_LEVEL != 0 || (!0L && __DEFAULT_AEABI_PORTABILITY_LEVEL != 0)
+S#define stdin  (__CLIBNS __aeabi_stdin)
+S   /* pointer to a FILE object associated with standard input stream */
+S#define stdout (__CLIBNS __aeabi_stdout)
+S   /* pointer to a FILE object associated with standard output stream */
+S#define stderr (__CLIBNS __aeabi_stderr)
+S   /* pointer to a FILE object associated with standard error stream */
+Sextern const int __aeabi_IOFBF;
+S#define _IOFBF (__CLIBNS __aeabi_IOFBF)
+Sextern const int __aeabi_IONBF;
+S#define _IONBF (__CLIBNS __aeabi_IONBF)
+Sextern const int __aeabi_IOLBF;
+S#define _IOLBF (__CLIBNS __aeabi_IOLBF)
+Sextern const int __aeabi_BUFSIZ;
+S#define BUFSIZ (__CLIBNS __aeabi_BUFSIZ)
+Sextern const int __aeabi_FOPEN_MAX;
+S#define FOPEN_MAX (__CLIBNS __aeabi_FOPEN_MAX)
+Sextern const int __aeabi_TMP_MAX;
+S#define TMP_MAX (__CLIBNS __aeabi_TMP_MAX)
+Sextern const int __aeabi_FILENAME_MAX;
+S#define FILENAME_MAX (__CLIBNS __aeabi_FILENAME_MAX)
+Sextern const int __aeabi_L_tmpnam;
+S#define L_tmpnam (__CLIBNS __aeabi_L_tmpnam)
+N#else
+N#define stdin  (&__CLIBNS __stdin)
+N   /* pointer to a FILE object associated with standard input stream */
+N#define stdout (&__CLIBNS __stdout)
+N   /* pointer to a FILE object associated with standard output stream */
+N#define stderr (&__CLIBNS __stderr)
+N   /* pointer to a FILE object associated with standard error stream */
+N
+N#define _IOFBF           0x100 /* fully buffered IO */
+N#define _IOLBF           0x200 /* line buffered IO */
+N#define _IONBF           0x400 /* unbuffered IO */
+N
+N    /* Various default file IO buffer sizes */
+N#define BUFSIZ       (512)  /* system buffer size (as used by setbuf) */
+N
+N#define FOPEN_MAX _SYS_OPEN
+N   /*
+N    * an integral constant expression that is the minimum number of files that
+N    * this implementation guarantees can be open simultaneously.
+N    */
+N
+N#define FILENAME_MAX 256
+N   /*
+N    * an integral constant expression that is the size of an array of char
+N    * large enough to hold the longest filename string
+N    */
+N#define L_tmpnam FILENAME_MAX
+N   /*
+N    * an integral constant expression that is the size of an array of char
+N    * large enough to hold a temporary file name string generated by the
+N    * tmpnam function.
+N    */
+N#define TMP_MAX 256
+N   /*
+N    * an integral constant expression that is the minimum number of unique
+N    * file names that shall be generated by the tmpnam function.
+N    */
+N
+N#endif
+N
+N#define EOF      (-1)
+N   /*
+N    * negative integral constant, indicates end-of-file, that is, no more input
+N    * from a stream.
+N    */
+N
+N#define SEEK_SET 0 /* start of stream (see fseek) */
+N#define SEEK_CUR 1 /* current position in stream (see fseek) */
+N#define SEEK_END 2 /* end of stream (see fseek) */
+N
+N    /*
+N     * _IOBIN is the flag passed to _sys_write to denote a binary
+N     * file.
+N     */
+N#define _IOBIN            0x04     /* binary stream */
+N
+N#define __STDIN_BUFSIZ  (64)  /* default stdin buffer size */
+N#define __STDOUT_BUFSIZ (64)  /* default stdout buffer size */
+N#define __STDERR_BUFSIZ (16)  /* default stderr buffer size */
+N
+Nextern _ARMABI int remove(const char * /*filename*/) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) int remove(const char *  ) __attribute__((__nonnull__(1)));
+N   /*
+N    * causes the file whose name is the string pointed to by filename to be
+N    * removed. Subsequent attempts to open the file will fail, unless it is
+N    * created anew. If the file is open, the behaviour of the remove function
+N    * is implementation-defined.
+N    * Returns: zero if the operation succeeds, nonzero if it fails.
+N    */
+Nextern _ARMABI int rename(const char * /*old*/, const char * /*new*/) __attribute__((__nonnull__(1,2)));
+Xextern __declspec(__nothrow) int rename(const char *  , const char *  ) __attribute__((__nonnull__(1,2)));
+N   /*
+N    * causes the file whose name is the string pointed to by old to be
+N    * henceforth known by the name given by the string pointed to by new. The
+N    * file named old is effectively removed. If a file named by the string
+N    * pointed to by new exists prior to the call of the rename function, the
+N    * behaviour is implementation-defined.
+N    * Returns: zero if the operation succeeds, nonzero if it fails, in which
+N    *          case if the file existed previously it is still known by its
+N    *          original name.
+N    */
+Nextern _ARMABI FILE *tmpfile(void);
+Xextern __declspec(__nothrow) FILE *tmpfile(void);
+N   /*
+N    * creates a temporary binary file that will be automatically removed when
+N    * it is closed or at program termination. The file is opened for update.
+N    * Returns: a pointer to the stream of the file that it created. If the file
+N    *          cannot be created, a null pointer is returned.
+N    */
+Nextern _ARMABI char *tmpnam(char * /*s*/);
+Xextern __declspec(__nothrow) char *tmpnam(char *  );
+N   /*
+N    * generates a string that is not the same as the name of an existing file.
+N    * The tmpnam function generates a different string each time it is called,
+N    * up to TMP_MAX times. If it is called more than TMP_MAX times, the
+N    * behaviour is implementation-defined.
+N    * Returns: If the argument is a null pointer, the tmpnam function leaves
+N    *          its result in an internal static object and returns a pointer to
+N    *          that object. Subsequent calls to the tmpnam function may modify
+N    *          the same object. if the argument is not a null pointer, it is
+N    *          assumed to point to an array of at least L_tmpnam characters;
+N    *          the tmpnam function writes its result in that array and returns
+N    *          the argument as its value.
+N    */
+N
+Nextern _ARMABI int fclose(FILE * /*stream*/) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) int fclose(FILE *  ) __attribute__((__nonnull__(1)));
+N   /*
+N    * causes the stream pointed to by stream to be flushed and the associated
+N    * file to be closed. Any unwritten buffered data for the stream are
+N    * delivered to the host environment to be written to the file; any unread
+N    * buffered data are discarded. The stream is disassociated from the file.
+N    * If the associated buffer was automatically allocated, it is deallocated.
+N    * Returns: zero if the stream was succesfully closed, or nonzero if any
+N    *          errors were detected or if the stream was already closed.
+N    */
+Nextern _ARMABI int fflush(FILE * /*stream*/);
+Xextern __declspec(__nothrow) int fflush(FILE *  );
+N   /*
+N    * If the stream points to an output or update stream in which the most
+N    * recent operation was output, the fflush function causes any unwritten
+N    * data for that stream to be delivered to the host environment to be
+N    * written to the file. If the stream points to an input or update stream,
+N    * the fflush function undoes the effect of any preceding ungetc operation
+N    * on the stream.
+N    * Returns: nonzero if a write error occurs.
+N    */
+Nextern _ARMABI FILE *fopen(const char * __restrict /*filename*/,
+Xextern __declspec(__nothrow) FILE *fopen(const char * __restrict  ,
+N                           const char * __restrict /*mode*/) __attribute__((__nonnull__(1,2)));
+N   /*
+N    * opens the file whose name is the string pointed to by filename, and
+N    * associates a stream with it.
+N    * The argument mode points to a string beginning with one of the following
+N    * sequences:
+N    * "r"         open text file for reading
+N    * "w"         create text file for writing, or truncate to zero length
+N    * "a"         append; open text file or create for writing at eof
+N    * "rb"        open binary file for reading
+N    * "wb"        create binary file for writing, or truncate to zero length
+N    * "ab"        append; open binary file or create for writing at eof
+N    * "r+"        open text file for update (reading and writing)
+N    * "w+"        create text file for update, or truncate to zero length
+N    * "a+"        append; open text file or create for update, writing at eof
+N    * "r+b"/"rb+" open binary file for update (reading and writing)
+N    * "w+b"/"wb+" create binary file for update, or truncate to zero length
+N    * "a+b"/"ab+" append; open binary file or create for update, writing at eof
+N    *
+N    * Opening a file with read mode ('r' as the first character in the mode
+N    * argument) fails if the file does not exist or cannot be read.
+N    * Opening a file with append mode ('a' as the first character in the mode
+N    * argument) causes all subsequent writes to be forced to the current end of
+N    * file, regardless of intervening calls to the fseek function. In some
+N    * implementations, opening a binary file with append mode ('b' as the
+N    * second or third character in the mode argument) may initially position
+N    * the file position indicator beyond the last data written, because of the
+N    * NUL padding.
+N    * When a file is opened with update mode ('+' as the second or third
+N    * character in the mode argument), both input and output may be performed
+N    * on the associated stream. However, output may not be directly followed
+N    * by input without an intervening call to the fflush fuction or to a file
+N    * positioning function (fseek, fsetpos, or rewind), and input be not be
+N    * directly followed by output without an intervening call to the fflush
+N    * fuction or to a file positioning function, unless the input operation
+N    * encounters end-of-file. Opening a file with update mode may open or
+N    * create a binary stream in some implementations. When opened, a stream
+N    * is fully buffered if and only if it does not refer to an interactive
+N    * device. The error and end-of-file indicators for the stream are
+N    * cleared.
+N    * Returns: a pointer to the object controlling the stream. If the open
+N    *          operation fails, fopen returns a null pointer.
+N    */
+Nextern _ARMABI FILE *freopen(const char * __restrict /*filename*/,
+Xextern __declspec(__nothrow) FILE *freopen(const char * __restrict  ,
+N                    const char * __restrict /*mode*/,
+N                    FILE * __restrict /*stream*/) __attribute__((__nonnull__(2,3)));
+N   /*
+N    * opens the file whose name is the string pointed to by filename and
+N    * associates the stream pointed to by stream with it. The mode argument is
+N    * used just as in the fopen function.
+N    * The freopen function first attempts to close any file that is associated
+N    * with the specified stream. Failure to close the file successfully is
+N    * ignored. The error and end-of-file indicators for the stream are cleared.
+N    * Returns: a null pointer if the operation fails. Otherwise, freopen
+N    *          returns the value of the stream.
+N    */
+Nextern _ARMABI void setbuf(FILE * __restrict /*stream*/,
+Xextern __declspec(__nothrow) void setbuf(FILE * __restrict  ,
+N                    char * __restrict /*buf*/) __attribute__((__nonnull__(1)));
+N   /*
+N    * Except that it returns no value, the setbuf function is equivalent to the
+N    * setvbuf function invoked with the values _IOFBF for mode and BUFSIZ for
+N    * size, or (if buf is a null pointer), with the value _IONBF for mode.
+N    * Returns: no value.
+N    */
+Nextern _ARMABI int setvbuf(FILE * __restrict /*stream*/,
+Xextern __declspec(__nothrow) int setvbuf(FILE * __restrict  ,
+N                   char * __restrict /*buf*/,
+N                   int /*mode*/, size_t /*size*/) __attribute__((__nonnull__(1)));
+N   /*
+N    * may be used after the stream pointed to by stream has been associated
+N    * with an open file but before it is read or written. The argument mode
+N    * determines how stream will be buffered, as follows: _IOFBF causes
+N    * input/output to be fully buffered; _IOLBF causes output to be line
+N    * buffered (the buffer will be flushed when a new-line character is
+N    * written, when the buffer is full, or when input is requested); _IONBF
+N    * causes input/output to be completely unbuffered. If buf is not the null
+N    * pointer, the array it points to may be used instead of an automatically
+N    * allocated buffer (the buffer must have a lifetime at least as great as
+N    * the open stream, so the stream should be closed before a buffer that has
+N    * automatic storage duration is deallocated upon block exit). The argument
+N    * size specifies the size of the array. The contents of the array at any
+N    * time are indeterminate.
+N    * Returns: zero on success, or nonzero if an invalid value is given for
+N    *          mode or size, or if the request cannot be honoured.
+N    */
+N#pragma __printf_args
+Nextern _ARMABI int fprintf(FILE * __restrict /*stream*/,
+Xextern __declspec(__nothrow) int fprintf(FILE * __restrict  ,
+N                    const char * __restrict /*format*/, ...) __attribute__((__nonnull__(1,2)));
+N   /*
+N    * writes output to the stream pointed to by stream, under control of the
+N    * string pointed to by format that specifies how subsequent arguments are
+N    * converted for output. If there are insufficient arguments for the format,
+N    * the behaviour is undefined. If the format is exhausted while arguments
+N    * remain, the excess arguments are evaluated but otherwise ignored. The
+N    * fprintf function returns when the end of the format string is reached.
+N    * The format shall be a multibyte character sequence, beginning and ending
+N    * in its initial shift state. The format is composed of zero or more
+N    * directives: ordinary multibyte characters (not %), which are copied
+N    * unchanged to the output stream; and conversion specifiers, each of which
+N    * results in fetching zero or more subsequent arguments. Each conversion
+N    * specification is introduced by the character %. For a description of the
+N    * available conversion specifiers refer to section 4.9.6.1 in the ANSI
+N    * draft mentioned at the start of this file or to any modern textbook on C.
+N    * The minimum value for the maximum number of characters producable by any
+N    * single conversion is at least 509.
+N    * Returns: the number of characters transmitted, or a negative value if an
+N    *          output error occurred.
+N    */
+N#pragma __printf_args
+Nextern _ARMABI int _fprintf(FILE * __restrict /*stream*/,
+Xextern __declspec(__nothrow) int _fprintf(FILE * __restrict  ,
+N                     const char * __restrict /*format*/, ...) __attribute__((__nonnull__(1,2)));
+N   /*
+N    * is equivalent to fprintf, but does not support floating-point formats.
+N    * You can use instead of fprintf to improve code size.
+N    * Returns: as fprintf.
+N    */
+N#pragma __printf_args
+Nextern _ARMABI int printf(const char * __restrict /*format*/, ...) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) int printf(const char * __restrict  , ...) __attribute__((__nonnull__(1)));
+N   /*
+N    * is equivalent to fprintf with the argument stdout interposed before the
+N    * arguments to printf.
+N    * Returns: the number of characters transmitted, or a negative value if an
+N    *          output error occurred.
+N    */
+N#pragma __printf_args
+Nextern _ARMABI int _printf(const char * __restrict /*format*/, ...) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) int _printf(const char * __restrict  , ...) __attribute__((__nonnull__(1)));
+N   /*
+N    * is equivalent to printf, but does not support floating-point formats.
+N    * You can use instead of printf to improve code size.
+N    * Returns: as printf.
+N    */
+N#pragma __printf_args
+Nextern _ARMABI int sprintf(char * __restrict /*s*/, const char * __restrict /*format*/, ...) __attribute__((__nonnull__(1,2)));
+Xextern __declspec(__nothrow) int sprintf(char * __restrict  , const char * __restrict  , ...) __attribute__((__nonnull__(1,2)));
+N   /*
+N    * is equivalent to fprintf, except that the argument s specifies an array
+N    * into which the generated output is to be written, rather than to a
+N    * stream. A null character is written at the end of the characters written;
+N    * it is not counted as part of the returned sum.
+N    * Returns: the number of characters written to the array, not counting the
+N    *          terminating null character.
+N    */
+N#pragma __printf_args
+Nextern _ARMABI int _sprintf(char * __restrict /*s*/, const char * __restrict /*format*/, ...) __attribute__((__nonnull__(1,2)));
+Xextern __declspec(__nothrow) int _sprintf(char * __restrict  , const char * __restrict  , ...) __attribute__((__nonnull__(1,2)));
+N   /*
+N    * is equivalent to sprintf, but does not support floating-point formats.
+N    * You can use instead of sprintf to improve code size.
+N    * Returns: as sprintf.
+N    */
+N
+N#pragma __printf_args
+Nextern _ARMABI int __ARM_snprintf(char * __restrict /*s*/, size_t /*n*/,
+Xextern __declspec(__nothrow) int __ARM_snprintf(char * __restrict  , size_t  ,
+N                     const char * __restrict /*format*/, ...) __attribute__((__nonnull__(3)));
+N
+N#if !defined(__STRICT_ANSI__) || (defined(__STDC_VERSION__) && 199901L <= __STDC_VERSION__) || (defined(__cplusplus) && 201103L <= __cplusplus)
+X#if !0L || (1L && 199901L <= 199409L) || (0L && 201103L <= __cplusplus)
+N#pragma __printf_args
+Nextern _ARMABI int snprintf(char * __restrict /*s*/, size_t /*n*/,
+Xextern __declspec(__nothrow) int snprintf(char * __restrict  , size_t  ,
+N                     const char * __restrict /*format*/, ...) __attribute__((__nonnull__(3)));
+N   /*
+N    * is equivalent to fprintf, except that the argument s specifies an array
+N    * into which the generated output is to be written, rather than to a
+N    * stream. The argument n specifies the size of the output array, so as to
+N    * avoid overflowing the buffer.
+N    * A null character is written at the end of the characters written, even
+N    * if the formatting was not completed; it is not counted as part of the
+N    * returned sum. At most n characters of the output buffer are used,
+N    * _including_ the null character.
+N    * Returns: the number of characters that would have been written to the
+N    *          array, not counting the terminating null character, if the
+N    *          array had been big enough. So if the return is >=0 and <n, then
+N    *          the entire string was successfully formatted; if the return is
+N    *          >=n, the string was truncated (but there is still a null char
+N    *          at the end of what was written); if the return is <0, there was
+N    *          an error.
+N    */
+N#endif
+N#pragma __printf_args
+Nextern _ARMABI int _snprintf(char * __restrict /*s*/, size_t /*n*/,
+Xextern __declspec(__nothrow) int _snprintf(char * __restrict  , size_t  ,
+N                      const char * __restrict /*format*/, ...) __attribute__((__nonnull__(3)));
+N   /*
+N    * is equivalent to snprintf, but does not support floating-point formats.
+N    * You can use instead of snprintf to improve code size.
+N    * Returns: as snprintf.
+N    */
+N#pragma __scanf_args
+Nextern _ARMABI int fscanf(FILE * __restrict /*stream*/,
+Xextern __declspec(__nothrow) int fscanf(FILE * __restrict  ,
+N                    const char * __restrict /*format*/, ...) __attribute__((__nonnull__(1,2)));
+N   /*
+N    * reads input from the stream pointed to by stream, under control of the
+N    * string pointed to by format that specifies the admissible input sequences
+N    * and how thay are to be converted for assignment, using subsequent
+N    * arguments as pointers to the objects to receive the converted input. If
+N    * there are insufficient arguments for the format, the behaviour is
+N    * undefined. If the format is exhausted while arguments remain, the excess
+N    * arguments are evaluated but otherwise ignored.
+N    * The format is composed of zero or more directives: one or more
+N    * white-space characters; an ordinary character (not %); or a conversion
+N    * specification. Each conversion specification is introduced by the
+N    * character %. For a description of the available conversion specifiers
+N    * refer to section 4.9.6.2 in the ANSI draft mentioned at the start of this
+N    * file, or to any modern textbook on C.
+N    * If end-of-file is encountered during input, conversion is terminated. If
+N    * end-of-file occurs before any characters matching the current directive
+N    * have been read (other than leading white space, where permitted),
+N    * execution of the current directive terminates with an input failure;
+N    * otherwise, unless execution of the current directive is terminated with a
+N    * matching failure, execution of the following directive (if any) is
+N    * terminated with an input failure.
+N    * If conversions terminates on a conflicting input character, the offending
+N    * input character is left unread in the input strem. Trailing white space
+N    * (including new-line characters) is left unread unless matched by a
+N    * directive. The success of literal matches and suppressed asignments is
+N    * not directly determinable other than via the %n directive.
+N    * Returns: the value of the macro EOF if an input failure occurs before any
+N    *          conversion. Otherwise, the fscanf function returns the number of
+N    *          input items assigned, which can be fewer than provided for, or
+N    *          even zero, in the event of an early conflict between an input
+N    *          character and the format.
+N    */
+N#pragma __scanf_args
+Nextern _ARMABI int _fscanf(FILE * __restrict /*stream*/,
+Xextern __declspec(__nothrow) int _fscanf(FILE * __restrict  ,
+N                     const char * __restrict /*format*/, ...) __attribute__((__nonnull__(1,2)));
+N   /*
+N    * is equivalent to fscanf, but does not support floating-point formats.
+N    * You can use instead of fscanf to improve code size.
+N    * Returns: as fscanf.
+N    */
+N#pragma __scanf_args
+Nextern _ARMABI int scanf(const char * __restrict /*format*/, ...) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) int scanf(const char * __restrict  , ...) __attribute__((__nonnull__(1)));
+N   /*
+N    * is equivalent to fscanf with the argument stdin interposed before the
+N    * arguments to scanf.
+N    * Returns: the value of the macro EOF if an input failure occurs before any
+N    *          conversion. Otherwise, the scanf function returns the number of
+N    *          input items assigned, which can be fewer than provided for, or
+N    *          even zero, in the event of an early matching failure.
+N    */
+N#pragma __scanf_args
+Nextern _ARMABI int _scanf(const char * __restrict /*format*/, ...) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) int _scanf(const char * __restrict  , ...) __attribute__((__nonnull__(1)));
+N   /*
+N    * is equivalent to scanf, but does not support floating-point formats.
+N    * You can use instead of scanf to improve code size.
+N    * Returns: as scanf.
+N    */
+N#pragma __scanf_args
+Nextern _ARMABI int sscanf(const char * __restrict /*s*/,
+Xextern __declspec(__nothrow) int sscanf(const char * __restrict  ,
+N                    const char * __restrict /*format*/, ...) __attribute__((__nonnull__(1,2)));
+N   /*
+N    * is equivalent to fscanf except that the argument s specifies a string
+N    * from which the input is to be obtained, rather than from a stream.
+N    * Reaching the end of the string is equivalent to encountering end-of-file
+N    * for the fscanf function.
+N    * Returns: the value of the macro EOF if an input failure occurs before any
+N    *          conversion. Otherwise, the scanf function returns the number of
+N    *          input items assigned, which can be fewer than provided for, or
+N    *          even zero, in the event of an early matching failure.
+N    */
+N#pragma __scanf_args
+Nextern _ARMABI int _sscanf(const char * __restrict /*s*/,
+Xextern __declspec(__nothrow) int _sscanf(const char * __restrict  ,
+N                     const char * __restrict /*format*/, ...) __attribute__((__nonnull__(1,2)));
+N   /*
+N    * is equivalent to sscanf, but does not support floating-point formats.
+N    * You can use instead of sscanf to improve code size.
+N    * Returns: as sscanf.
+N    */
+N#if !defined(__STRICT_ANSI__) || (defined(__STDC_VERSION__) && 199901L <= __STDC_VERSION__) || (defined(__cplusplus) && 201103L <= __cplusplus)
+X#if !0L || (1L && 199901L <= 199409L) || (0L && 201103L <= __cplusplus)
+N/* C99 additions */
+Nextern _ARMABI int vfscanf(FILE * __restrict /*stream*/, const char * __restrict /*format*/, __va_list) __attribute__((__nonnull__(1,2)));
+Xextern __declspec(__nothrow) int vfscanf(FILE * __restrict  , const char * __restrict  , __va_list) __attribute__((__nonnull__(1,2)));
+Nextern _ARMABI int vscanf(const char * __restrict /*format*/, __va_list) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) int vscanf(const char * __restrict  , __va_list) __attribute__((__nonnull__(1)));
+Nextern _ARMABI int vsscanf(const char * __restrict /*s*/, const char * __restrict /*format*/, __va_list) __attribute__((__nonnull__(1,2)));
+Xextern __declspec(__nothrow) int vsscanf(const char * __restrict  , const char * __restrict  , __va_list) __attribute__((__nonnull__(1,2)));
+N#endif
+Nextern _ARMABI int _vfscanf(FILE * __restrict /*stream*/, const char * __restrict /*format*/, __va_list) __attribute__((__nonnull__(1,2)));
+Xextern __declspec(__nothrow) int _vfscanf(FILE * __restrict  , const char * __restrict  , __va_list) __attribute__((__nonnull__(1,2)));
+Nextern _ARMABI int _vscanf(const char * __restrict /*format*/, __va_list) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) int _vscanf(const char * __restrict  , __va_list) __attribute__((__nonnull__(1)));
+Nextern _ARMABI int _vsscanf(const char * __restrict /*s*/, const char * __restrict /*format*/, __va_list) __attribute__((__nonnull__(1,2)));
+Xextern __declspec(__nothrow) int _vsscanf(const char * __restrict  , const char * __restrict  , __va_list) __attribute__((__nonnull__(1,2)));
+Nextern _ARMABI int __ARM_vsscanf(const char * __restrict /*s*/, const char * __restrict /*format*/, __va_list) __attribute__((__nonnull__(1,2)));
+Xextern __declspec(__nothrow) int __ARM_vsscanf(const char * __restrict  , const char * __restrict  , __va_list) __attribute__((__nonnull__(1,2)));
+N
+Nextern _ARMABI int vprintf(const char * __restrict /*format*/, __va_list /*arg*/) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) int vprintf(const char * __restrict  , __va_list  ) __attribute__((__nonnull__(1)));
+N   /*
+N    * is equivalent to printf, with the variable argument list replaced by arg,
+N    * which has been initialised by the va_start macro (and possibly subsequent
+N    * va_arg calls). The vprintf function does not invoke the va_end function.
+N    * Returns: the number of characters transmitted, or a negative value if an
+N    *          output error occurred.
+N    */
+Nextern _ARMABI int _vprintf(const char * __restrict /*format*/, __va_list /*arg*/) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) int _vprintf(const char * __restrict  , __va_list  ) __attribute__((__nonnull__(1)));
+N   /*
+N    * is equivalent to vprintf, but does not support floating-point formats.
+N    * You can use instead of vprintf to improve code size.
+N    * Returns: as vprintf.
+N    */
+Nextern _ARMABI int vfprintf(FILE * __restrict /*stream*/,
+Xextern __declspec(__nothrow) int vfprintf(FILE * __restrict  ,
+N                    const char * __restrict /*format*/, __va_list /*arg*/) __attribute__((__nonnull__(1,2)));
+N   /*
+N    * is equivalent to fprintf, with the variable argument list replaced by
+N    * arg, which has been initialised by the va_start macro (and possibly
+N    * subsequent va_arg calls). The vfprintf function does not invoke the
+N    * va_end function.
+N    * Returns: the number of characters transmitted, or a negative value if an
+N    *          output error occurred.
+N    */
+Nextern _ARMABI int vsprintf(char * __restrict /*s*/,
+Xextern __declspec(__nothrow) int vsprintf(char * __restrict  ,
+N                     const char * __restrict /*format*/, __va_list /*arg*/) __attribute__((__nonnull__(1,2)));
+N   /*
+N    * is equivalent to sprintf, with the variable argument list replaced by
+N    * arg, which has been initialised by the va_start macro (and possibly
+N    * subsequent va_arg calls). The vsprintf function does not invoke the
+N    * va_end function.
+N    * Returns: the number of characters written in the array, not counting the
+N    *          terminating null character.
+N    */
+Nextern _ARMABI int __ARM_vsnprintf(char * __restrict /*s*/, size_t /*n*/,
+Xextern __declspec(__nothrow) int __ARM_vsnprintf(char * __restrict  , size_t  ,
+N                     const char * __restrict /*format*/, __va_list /*arg*/) __attribute__((__nonnull__(3)));
+N#if !defined(__STRICT_ANSI__) || (defined(__STDC_VERSION__) && 199901L <= __STDC_VERSION__) || (defined(__cplusplus) && 201103L <= __cplusplus)
+X#if !0L || (1L && 199901L <= 199409L) || (0L && 201103L <= __cplusplus)
+Nextern _ARMABI int vsnprintf(char * __restrict /*s*/, size_t /*n*/,
+Xextern __declspec(__nothrow) int vsnprintf(char * __restrict  , size_t  ,
+N                     const char * __restrict /*format*/, __va_list /*arg*/) __attribute__((__nonnull__(3)));
+N   /*
+N    * is equivalent to snprintf, with the variable argument list replaced by
+N    * arg, which has been initialised by the va_start macro (and possibly
+N    * subsequent va_arg calls). The vsprintf function does not invoke the
+N    * va_end function.
+N    * Returns: the number of characters that would have been written in the
+N    *          array, not counting the terminating null character. As
+N    *          snprintf.
+N    */
+N#endif
+Nextern _ARMABI int _vsprintf(char * __restrict /*s*/,
+Xextern __declspec(__nothrow) int _vsprintf(char * __restrict  ,
+N                      const char * __restrict /*format*/, __va_list /*arg*/) __attribute__((__nonnull__(1,2)));
+N   /*
+N    * is equivalent to vsprintf, but does not support floating-point formats.
+N    * You can use instead of vsprintf to improve code size.
+N    * Returns: as vsprintf.
+N    */
+Nextern _ARMABI int _vfprintf(FILE * __restrict /*stream*/,
+Xextern __declspec(__nothrow) int _vfprintf(FILE * __restrict  ,
+N                     const char * __restrict /*format*/, __va_list /*arg*/) __attribute__((__nonnull__(1,2)));
+N   /*
+N    * is equivalent to vfprintf, but does not support floating-point formats.
+N    * You can use instead of vfprintf to improve code size.
+N    * Returns: as vfprintf.
+N    */
+Nextern _ARMABI int _vsnprintf(char * __restrict /*s*/, size_t /*n*/,
+Xextern __declspec(__nothrow) int _vsnprintf(char * __restrict  , size_t  ,
+N                      const char * __restrict /*format*/, __va_list /*arg*/) __attribute__((__nonnull__(3)));
+N   /*
+N    * is equivalent to vsnprintf, but does not support floating-point formats.
+N    * You can use instead of vsnprintf to improve code size.
+N    * Returns: as vsnprintf.
+N    */
+N#if !defined(__STRICT_ANSI__)
+X#if !0L
+N#pragma __printf_args
+Nextern _ARMABI int asprintf(char ** /*strp*/, const char * __restrict /*format*/, ...) __attribute__((__nonnull__(2)));
+Xextern __declspec(__nothrow) int asprintf(char **  , const char * __restrict  , ...) __attribute__((__nonnull__(2)));
+Nextern _ARMABI int vasprintf(char ** /*strp*/, const char * __restrict /*format*/, __va_list /*arg*/) __attribute__((__nonnull__(2)));
+Xextern __declspec(__nothrow) int vasprintf(char **  , const char * __restrict  , __va_list  ) __attribute__((__nonnull__(2)));
+N#endif
+N#pragma __printf_args
+Nextern _ARMABI int __ARM_asprintf(char ** /*strp*/, const char * __restrict /*format*/, ...) __attribute__((__nonnull__(2)));
+Xextern __declspec(__nothrow) int __ARM_asprintf(char **  , const char * __restrict  , ...) __attribute__((__nonnull__(2)));
+Nextern _ARMABI int __ARM_vasprintf(char ** /*strp*/, const char * __restrict /*format*/, __va_list /*arg*/) __attribute__((__nonnull__(2)));
+Xextern __declspec(__nothrow) int __ARM_vasprintf(char **  , const char * __restrict  , __va_list  ) __attribute__((__nonnull__(2)));
+N   /*
+N    * dynamically allocates a buffer of the right size for the
+N    * formatted string, and returns it in (*strp). Formal return value
+N    * is the same as any other printf variant, except that it returns
+N    * -1 if the buffer could not be allocated.
+N    *
+N    * (The functions with __ARM_ prefixed names are identical to the
+N    * ones without, but are available in all compilation modes without
+N    * violating user namespace.)
+N    */
+N
+Nextern _ARMABI int fgetc(FILE * /*stream*/) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) int fgetc(FILE *  ) __attribute__((__nonnull__(1)));
+N   /*
+N    * obtains the next character (if present) as an unsigned char converted to
+N    * an int, from the input stream pointed to by stream, and advances the
+N    * associated file position indicator (if defined).
+N    * Returns: the next character from the input stream pointed to by stream.
+N    *          If the stream is at end-of-file, the end-of-file indicator is
+N    *          set and fgetc returns EOF. If a read error occurs, the error
+N    *          indicator is set and fgetc returns EOF.
+N    */
+Nextern _ARMABI char *fgets(char * __restrict /*s*/, int /*n*/,
+Xextern __declspec(__nothrow) char *fgets(char * __restrict  , int  ,
+N                    FILE * __restrict /*stream*/) __attribute__((__nonnull__(1,3)));
+N   /*
+N    * reads at most one less than the number of characters specified by n from
+N    * the stream pointed to by stream into the array pointed to by s. No
+N    * additional characters are read after a new-line character (which is
+N    * retained) or after end-of-file. A null character is written immediately
+N    * after the last character read into the array.
+N    * Returns: s if successful. If end-of-file is encountered and no characters
+N    *          have been read into the array, the contents of the array remain
+N    *          unchanged and a null pointer is returned. If a read error occurs
+N    *          during the operation, the array contents are indeterminate and a
+N    *          null pointer is returned.
+N    */
+Nextern _ARMABI int fputc(int /*c*/, FILE * /*stream*/) __attribute__((__nonnull__(2)));
+Xextern __declspec(__nothrow) int fputc(int  , FILE *  ) __attribute__((__nonnull__(2)));
+N   /*
+N    * writes the character specified by c (converted to an unsigned char) to
+N    * the output stream pointed to by stream, at the position indicated by the
+N    * asociated file position indicator (if defined), and advances the
+N    * indicator appropriately. If the file position indicator is not defined,
+N    * the character is appended to the output stream.
+N    * Returns: the character written. If a write error occurs, the error
+N    *          indicator is set and fputc returns EOF.
+N    */
+Nextern _ARMABI int fputs(const char * __restrict /*s*/, FILE * __restrict /*stream*/) __attribute__((__nonnull__(1,2)));
+Xextern __declspec(__nothrow) int fputs(const char * __restrict  , FILE * __restrict  ) __attribute__((__nonnull__(1,2)));
+N   /*
+N    * writes the string pointed to by s to the stream pointed to by stream.
+N    * The terminating null character is not written.
+N    * Returns: EOF if a write error occurs; otherwise it returns a nonnegative
+N    *          value.
+N    */
+Nextern _ARMABI int getc(FILE * /*stream*/) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) int getc(FILE *  ) __attribute__((__nonnull__(1)));
+N   /*
+N    * is equivalent to fgetc except that it may be implemented as an unsafe
+N    * macro (stream may be evaluated more than once, so the argument should
+N    * never be an expression with side-effects).
+N    * Returns: the next character from the input stream pointed to by stream.
+N    *          If the stream is at end-of-file, the end-of-file indicator is
+N    *          set and getc returns EOF. If a read error occurs, the error
+N    *          indicator is set and getc returns EOF.
+N    */
+N#ifdef __cplusplus
+S    inline int getchar() { return getc(stdin); }
+N#else
+N    #define getchar() getc(stdin)
+N    extern _ARMABI int (getchar)(void);
+X    extern __declspec(__nothrow) int (getchar)(void);
+N#endif
+N   /*
+N    * is equivalent to getc with the argument stdin.
+N    * Returns: the next character from the input stream pointed to by stdin.
+N    *          If the stream is at end-of-file, the end-of-file indicator is
+N    *          set and getchar returns EOF. If a read error occurs, the error
+N    *          indicator is set and getchar returns EOF.
+N    */
+Nextern _ARMABI char *gets(char * /*s*/) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) char *gets(char *  ) __attribute__((__nonnull__(1)));
+N   /*
+N    * reads characters from the input stream pointed to by stdin into the array
+N    * pointed to by s, until end-of-file is encountered or a new-line character
+N    * is read. Any new-line character is discarded, and a null character is
+N    * written immediately after the last character read into the array.
+N    * Returns: s if successful. If end-of-file is encountered and no characters
+N    *          have been read into the array, the contents of the array remain
+N    *          unchanged and a null pointer is returned. If a read error occurs
+N    *          during the operation, the array contents are indeterminate and a
+N    *          null pointer is returned.
+N    */
+Nextern _ARMABI int putc(int /*c*/, FILE * /*stream*/) __attribute__((__nonnull__(2)));
+Xextern __declspec(__nothrow) int putc(int  , FILE *  ) __attribute__((__nonnull__(2)));
+N   /*
+N    * is equivalent to fputc except that it may be implemented as aan unsafe
+N    * macro (stream may be evaluated more than once, so the argument should
+N    * never be an expression with side-effects).
+N    * Returns: the character written. If a write error occurs, the error
+N    *          indicator is set and putc returns EOF.
+N    */
+N#ifdef __cplusplus
+S    inline int putchar(int __c) { return putc(__c, stdout); }
+N#else
+N    #define putchar(c) putc(c, stdout)
+N    extern _ARMABI int (putchar)(int /*c*/);
+X    extern __declspec(__nothrow) int (putchar)(int  );
+N#endif
+N   /*
+N    * is equivalent to putc with the second argument stdout.
+N    * Returns: the character written. If a write error occurs, the error
+N    *          indicator is set and putc returns EOF.
+N    */
+Nextern _ARMABI int puts(const char * /*s*/) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) int puts(const char *  ) __attribute__((__nonnull__(1)));
+N   /*
+N    * writes the string pointed to by s to the stream pointed to by stdout, and
+N    * appends a new-line character to the output. The terminating null
+N    * character is not written.
+N    * Returns: EOF if a write error occurs; otherwise it returns a nonnegative
+N    *          value.
+N    */
+Nextern _ARMABI int ungetc(int /*c*/, FILE * /*stream*/) __attribute__((__nonnull__(2)));
+Xextern __declspec(__nothrow) int ungetc(int  , FILE *  ) __attribute__((__nonnull__(2)));
+N   /*
+N    * pushes the character specified by c (converted to an unsigned char) back
+N    * onto the input stream pointed to by stream. The character will be
+N    * returned by the next read on that stream. An intervening call to the
+N    * fflush function or to a file positioning function (fseek, fsetpos,
+N    * rewind) discards any pushed-back characters. The extern _ARMABIal storage
+N    * corresponding to the stream is unchanged.
+N    * One character pushback is guaranteed. If the unget function is called too
+N    * many times on the same stream without an intervening read or file
+N    * positioning operation on that stream, the operation may fail.
+N    * If the value of c equals that of the macro EOF, the operation fails and
+N    * the input stream is unchanged.
+N    * A successful call to the ungetc function clears the end-of-file
+N    * indicator. The value of the file position indicator after reading or
+N    * discarding all pushed-back characters shall be the same as it was before
+N    * the characters were pushed back. For a text stream, the value of the file
+N    * position indicator after a successful call to the ungetc function is
+N    * unspecified until all pushed-back characters are read or discarded. For a
+N    * binary stream, the file position indicator is decremented by each
+N    * successful call to the ungetc function; if its value was zero before a
+N    * call, it is indeterminate after the call.
+N    * Returns: the character pushed back after conversion, or EOF if the
+N    *          operation fails.
+N    */
+N
+Nextern _ARMABI size_t fread(void * __restrict /*ptr*/,
+Xextern __declspec(__nothrow) size_t fread(void * __restrict  ,
+N                    size_t /*size*/, size_t /*nmemb*/, FILE * __restrict /*stream*/) __attribute__((__nonnull__(1,4)));
+N   /*
+N    * reads into the array pointed to by ptr, up to nmemb members whose size is
+N    * specified by size, from the stream pointed to by stream. The file
+N    * position indicator (if defined) is advanced by the number of characters
+N    * successfully read. If an error occurs, the resulting value of the file
+N    * position indicator is indeterminate. If a partial member is read, its
+N    * value is indeterminate. The ferror or feof function shall be used to
+N    * distinguish between a read error and end-of-file.
+N    * Returns: the number of members successfully read, which may be less than
+N    *          nmemb if a read error or end-of-file is encountered. If size or
+N    *          nmemb is zero, fread returns zero and the contents of the array
+N    *          and the state of the stream remain unchanged.
+N    */
+N
+Nextern _ARMABI size_t __fread_bytes_avail(void * __restrict /*ptr*/,
+Xextern __declspec(__nothrow) size_t __fread_bytes_avail(void * __restrict  ,
+N                    size_t /*count*/, FILE * __restrict /*stream*/) __attribute__((__nonnull__(1,3)));
+N   /*
+N    * reads into the array pointed to by ptr, up to count characters from the
+N    * stream pointed to by stream. The file position indicator (if defined)
+N    * is advanced by the number of characters successfully read. If an error
+N    * occurs, the resulting value of the file position indicator is
+N    * indeterminate. The ferror or feof function shall be used to
+N    * distinguish between a read error and end-of-file.  The call will block
+N    * only if no characters are available.
+N    * Returns: the number of characters successfully read, which may be less than
+N    *          count. If count is zero, __fread_bytes_avail returns zero and
+N    *          the contents of the array and the state of the stream remain
+N    *          unchanged.
+N    */
+N
+Nextern _ARMABI size_t fwrite(const void * __restrict /*ptr*/,
+Xextern __declspec(__nothrow) size_t fwrite(const void * __restrict  ,
+N                    size_t /*size*/, size_t /*nmemb*/, FILE * __restrict /*stream*/) __attribute__((__nonnull__(1,4)));
+N   /*
+N    * writes, from the array pointed to by ptr up to nmemb members whose size
+N    * is specified by size, to the stream pointed to by stream. The file
+N    * position indicator (if defined) is advanced by the number of characters
+N    * successfully written. If an error occurs, the resulting value of the file
+N    * position indicator is indeterminate.
+N    * Returns: the number of members successfully written, which will be less
+N    *          than nmemb only if a write error is encountered.
+N    */
+N
+Nextern _ARMABI int fgetpos(FILE * __restrict /*stream*/, fpos_t * __restrict /*pos*/) __attribute__((__nonnull__(1,2)));
+Xextern __declspec(__nothrow) int fgetpos(FILE * __restrict  , fpos_t * __restrict  ) __attribute__((__nonnull__(1,2)));
+N   /*
+N    * stores the current value of the file position indicator for the stream
+N    * pointed to by stream in the object pointed to by pos. The value stored
+N    * contains unspecified information usable by the fsetpos function for
+N    * repositioning the stream to its position at the time  of the call to the
+N    * fgetpos function.
+N    * Returns: zero, if successful. Otherwise nonzero is returned and the
+N    *          integer expression errno is set to an implementation-defined
+N    *          nonzero value.
+N    */
+Nextern _ARMABI int fseek(FILE * /*stream*/, long int /*offset*/, int /*whence*/) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) int fseek(FILE *  , long int  , int  ) __attribute__((__nonnull__(1)));
+N   /*
+N    * sets the file position indicator for the stream pointed to by stream.
+N    * For a binary stream, the new position is at the signed number of
+N    * characters specified by offset away from the point specified by whence.
+N    * The specified point is the beginning of the file for SEEK_SET, the
+N    * current position in the file for SEEK_CUR, or end-of-file for SEEK_END.
+N    * A binary stream need not meaningfully support fseek calls with a whence
+N    * value of SEEK_END.
+N    * For a text stream, either offset shall be zero, or offset shall be a
+N    * value returned by an earlier call to the ftell function on the same
+N    * stream and whence shall be SEEK_SET.
+N    * The fseek function clears the end-of-file indicator and undoes any
+N    * effects of the ungetc function on the same stream. After an fseek call,
+N    * the next operation on an update stream may be either input or output.
+N    * Returns: nonzero only for a request that cannot be satisfied.
+N    */
+Nextern _ARMABI int fsetpos(FILE * __restrict /*stream*/, const fpos_t * __restrict /*pos*/) __attribute__((__nonnull__(1,2)));
+Xextern __declspec(__nothrow) int fsetpos(FILE * __restrict  , const fpos_t * __restrict  ) __attribute__((__nonnull__(1,2)));
+N   /*
+N    * sets  the file position indicator for the stream pointed to by stream
+N    * according to the value of the object pointed to by pos, which shall be a
+N    * value returned by an earlier call to the fgetpos function on the same
+N    * stream.
+N    * The fsetpos function clears the end-of-file indicator and undoes any
+N    * effects of the ungetc function on the same stream. After an fsetpos call,
+N    * the next operation on an update stream may be either input or output.
+N    * Returns: zero, if successful. Otherwise nonzero is returned and the
+N    *          integer expression errno is set to an implementation-defined
+N    *          nonzero value.
+N    */
+Nextern _ARMABI long int ftell(FILE * /*stream*/) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) long int ftell(FILE *  ) __attribute__((__nonnull__(1)));
+N   /*
+N    * obtains the current value of the file position indicator for the stream
+N    * pointed to by stream. For a binary stream, the value is the number of
+N    * characters from the beginning of the file. For a text stream, the file
+N    * position indicator contains unspecified information, usable by the fseek
+N    * function for returning the file position indicator to its position at the
+N    * time of the ftell call; the difference between two such return values is
+N    * not necessarily a meaningful measure of the number of characters written
+N    * or read.
+N    * Returns: if successful, the current value of the file position indicator.
+N    *          On failure, the ftell function returns -1L and sets the integer
+N    *          expression errno to an implementation-defined nonzero value.
+N    */
+Nextern _ARMABI void rewind(FILE * /*stream*/) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) void rewind(FILE *  ) __attribute__((__nonnull__(1)));
+N   /*
+N    * sets the file position indicator for the stream pointed to by stream to
+N    * the beginning of the file. It is equivalent to
+N    *          (void)fseek(stream, 0L, SEEK_SET)
+N    * except that the error indicator for the stream is also cleared.
+N    * Returns: no value.
+N    */
+N
+Nextern _ARMABI void clearerr(FILE * /*stream*/) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) void clearerr(FILE *  ) __attribute__((__nonnull__(1)));
+N   /*
+N    * clears the end-of-file and error indicators for the stream pointed to by
+N    * stream. These indicators are cleared only when the file is opened or by
+N    * an explicit call to the clearerr function or to the rewind function.
+N    * Returns: no value.
+N    */
+N
+Nextern _ARMABI int feof(FILE * /*stream*/) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) int feof(FILE *  ) __attribute__((__nonnull__(1)));
+N   /*
+N    * tests the end-of-file indicator for the stream pointed to by stream.
+N    * Returns: nonzero iff the end-of-file indicator is set for stream.
+N    */
+Nextern _ARMABI int ferror(FILE * /*stream*/) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) int ferror(FILE *  ) __attribute__((__nonnull__(1)));
+N   /*
+N    * tests the error indicator for the stream pointed to by stream.
+N    * Returns: nonzero iff the error indicator is set for stream.
+N    */
+Nextern _ARMABI void perror(const char * /*s*/);
+Xextern __declspec(__nothrow) void perror(const char *  );
+N   /*
+N    * maps the error number  in the integer expression errno to an error
+N    * message. It writes a sequence of characters to the standard error stream
+N    * thus: first (if s is not a null pointer and the character pointed to by
+N    * s is not the null character), the string pointed to by s followed by a
+N    * colon and a space; then an appropriate error message string followed by
+N    * a new-line character. The contents of the error message strings are the
+N    * same as those returned by the strerror function with argument errno,
+N    * which are implementation-defined.
+N    * Returns: no value.
+N    */
+N
+Nextern _ARMABI int _fisatty(FILE * /*stream*/ ) __attribute__((__nonnull__(1)));
+Xextern __declspec(__nothrow) int _fisatty(FILE *   ) __attribute__((__nonnull__(1)));
+N    /* Returns 1 if the stream is tty (stdin), 0 otherwise. Not ANSI compliant.
+N     */
+N
+Nextern _ARMABI void __use_no_semihosting_swi(void);
+Xextern __declspec(__nothrow) void __use_no_semihosting_swi(void);
+Nextern _ARMABI void __use_no_semihosting(void);
+Xextern __declspec(__nothrow) void __use_no_semihosting(void);
+N    /*
+N     * Referencing either of these symbols will cause a link-time
+N     * error if any library functions that use semihosting SWI
+N     * calls are also present in the link, i.e. you define it if
+N     * you want to make sure you haven't accidentally used any such
+N     * SWIs.
+N     */
+N
+N    #ifdef __cplusplus
+S        }  /* extern "C" */
+S      }  /* namespace std */
+N    #endif
+N  #endif /* __STDIO_DECLS */
+N
+N  #if _AEABI_PORTABILITY_LEVEL != 0 && !defined _AEABI_PORTABLE
+X  #if _AEABI_PORTABILITY_LEVEL != 0 && !0L
+S    #define _AEABI_PORTABLE
+N  #endif
+N
+N  #if defined(__cplusplus) && !defined(__STDIO_NO_EXPORTS)
+X  #if 0L && !0L
+S    using ::std::size_t;
+S    using ::std::fpos_t;
+S    using ::std::FILE;
+S    using ::std::remove;
+S    using ::std::rename;
+S    using ::std::tmpfile;
+S    using ::std::tmpnam;
+S    using ::std::fclose;
+S    using ::std::fflush;
+S    using ::std::fopen;
+S    using ::std::freopen;
+S    using ::std::setbuf;
+S    using ::std::setvbuf;
+S    using ::std::fprintf;
+S    using ::std::_fprintf;
+S    using ::std::printf;
+S    using ::std::_printf;
+S    using ::std::sprintf;
+S    using ::std::_sprintf;
+S    #if !defined(__STRICT_ANSI__) || (defined(__STDC_VERSION__) && 199901L <= __STDC_VERSION__) || (defined(__cplusplus) && 201103L <= __cplusplus)
+S      using ::std::snprintf;
+S      using ::std::vsnprintf;
+S      using ::std::vfscanf;
+S      using ::std::vscanf;
+S      using ::std::vsscanf;
+S    #endif
+S    using ::std::_snprintf;
+S    using ::std::_vsnprintf;
+S#if !defined(__STRICT_ANSI__)
+S    using ::std::asprintf;
+S    using ::std::vasprintf;
+S#endif
+S    using ::std::__ARM_asprintf;
+S    using ::std::__ARM_vasprintf;
+S    using ::std::__ARM_vsnprintf;
+S    using ::std::__ARM_snprintf;
+S    using ::std::__ARM_vsscanf;
+S    using ::std::fscanf;
+S    using ::std::_fscanf;
+S    using ::std::scanf;
+S    using ::std::_scanf;
+S    using ::std::sscanf;
+S    using ::std::_sscanf;
+S    using ::std::_vfscanf;
+S    using ::std::_vscanf;
+S    using ::std::_vsscanf;
+S    using ::std::vprintf;
+S    using ::std::_vprintf;
+S    using ::std::vfprintf;
+S    using ::std::_vfprintf;
+S    using ::std::vsprintf;
+S    using ::std::_vsprintf;
+S    using ::std::fgetc;
+S    using ::std::fgets;
+S    using ::std::fputc;
+S    using ::std::fputs;
+S    using ::std::getc;
+S    using ::std::getchar;
+S    using ::std::gets;
+S    using ::std::putc;
+S    using ::std::putchar;
+S    using ::std::puts;
+S    using ::std::ungetc;
+S    using ::std::fread;
+S    using ::std::__fread_bytes_avail;
+S    using ::std::fwrite;
+S    using ::std::fgetpos;
+S    using ::std::fseek;
+S    using ::std::fsetpos;
+S    using ::std::ftell;
+S    using ::std::rewind;
+S    using ::std::clearerr;
+S    using ::std::feof;
+S    using ::std::ferror;
+S    using ::std::perror;
+S    using ::std::_fisatty;
+S    using ::std::__use_no_semihosting_swi;
+S    using ::std::__use_no_semihosting;
+N  #endif
+N
+N#endif /* ndef __stdio_h */
+N
+N/* end of stdio.h */
+N
+L 658 "..\..\RL-ARM\Config\Net_lib.c" 2
+N
+N#pragma diag_suppress 111
+N
+Nextern char *dbg_time (void);
+Nextern char *dbg_proc (U32 proc);
+N
+N/*--------------------------- __debug__ -------------------------------------*/
+N
+Nvoid __debug__ (U32 proc, const char *fmt, ...) {
+N  /* Print TCPnet Debug messages. */
+N  va_list args;
+N
+N  switch (proc) {
+N#if (DBG_MEM > 1)
+X#if (0 > 1)
+S    case MODULE_MEM:  break;
+N#endif
+N#if (DBG_ETH > 1)
+X#if (0 > 1)
+S    case MODULE_ETH:  break;
+N#endif
+N#if (DBG_PPP > 1)
+X#if (0 > 1)
+S    case MODULE_PPP:  break;
+N#endif
+N#if (DBG_SLIP > 1)
+X#if (0 > 1)
+S    case MODULE_SLIP: break;
+N#endif
+N#if (DBG_ARP > 1)
+X#if (0 > 1)
+S    case MODULE_ARP:  break;
+N#endif
+N#if (DBG_IP > 1)
+X#if (0 > 1)
+S    case MODULE_IP:   break;
+N#endif
+N#if (DBG_ICMP > 1)
+X#if (0 > 1)
+S    case MODULE_ICMP: break;
+N#endif
+N#if (DBG_IGMP > 1)
+X#if (0 > 1)
+S    case MODULE_IGMP: break;
+N#endif
+N#if (DBG_UDP > 1)
+X#if (0 > 1)
+S    case MODULE_UDP:  break;
+N#endif
+N#if (DBG_TCP > 1)
+X#if (0 > 1)
+S    case MODULE_TCP:  break;
+N#endif
+N#if (DBG_NBNS > 1)
+X#if (0 > 1)
+S    case MODULE_NBNS: break;
+N#endif
+N#if (DBG_DHCP > 1)
+X#if (0 > 1)
+S    case MODULE_DHCP: break;
+N#endif
+N#if (DBG_DNS > 1)
+X#if (0 > 1)
+S    case MODULE_DNS:  break;
+N#endif
+N#if (DBG_SNMP > 1)
+X#if (0 > 1)
+S    case MODULE_SNMP: break;
+N#endif
+N#if (DBG_BSD > 1)
+X#if (0 > 1)
+S    case MODULE_BSD:  break;
+N#endif
+N#if (DBG_HTTP > 1)
+X#if (0 > 1)
+S    case MODULE_HTTP: break;
+N#endif
+N#if (DBG_FTP > 1)
+X#if (0 > 1)
+S    case MODULE_FTP:  break;
+N#endif
+N#if (DBG_FTPC > 1)
+X#if (0 > 1)
+S    case MODULE_FTPC: break;
+N#endif
+N#if (DBG_TNET > 1)
+X#if (0 > 1)
+S    case MODULE_TNET: break;
+N#endif
+N#if (DBG_TFTP > 1)
+X#if (0 > 1)
+S    case MODULE_TFTP: break;
+N#endif
+N#if (DBG_TFTPC > 1)
+X#if (0 > 1)
+S    case MODULE_TFTPC:break;
+N#endif
+N#if (DBG_SMTP > 1)
+X#if (0 > 1)
+S    case MODULE_SMTP: break;
+N#endif
+N#if (DBG_SNTP > 1)
+X#if (0 > 1)
+S    case MODULE_SNTP: break;
+N#endif
+N    default: return;
+N  }
+N#if (DBG_TIME)
+X#if (1)
+N  printf (dbg_time());
+N#endif
+N  printf ("%s:",dbg_proc(proc));
+N
+N  va_start (args,fmt);
+X  __va_start(args, fmt);
+N  vprintf (fmt,args);
+N  va_end (args);
+X  __va_end(args);
+N}
+N
+N
+N/*--------------------------- __error__ -------------------------------------*/
+N
+Nvoid __error__ (U32 proc, const char *fmt, ...) {
+N  /* Print TCPnet Error messages. */
+N  va_list args;
+N
+N  switch (proc) {
+N#if (DBG_MEM > 0)
+X#if (0 > 0)
+S    case MODULE_MEM:  break;
+N#endif
+N#if (DBG_ETH > 0)
+X#if (0 > 0)
+S    case MODULE_ETH:  break;
+N#endif
+N#if (DBG_PPP > 0)
+X#if (0 > 0)
+S    case MODULE_PPP:  break;
+N#endif
+N#if (DBG_SLIP > 0)
+X#if (0 > 0)
+S    case MODULE_SLIP: break;
+N#endif
+N#if (DBG_ARP > 0)
+X#if (0 > 0)
+S    case MODULE_ARP:  break;
+N#endif
+N#if (DBG_IP > 0)
+X#if (0 > 0)
+S    case MODULE_IP:   break;
+N#endif
+N#if (DBG_ICMP > 0)
+X#if (0 > 0)
+S    case MODULE_ICMP: break;
+N#endif
+N#if (DBG_IGMP > 0)
+X#if (0 > 0)
+S    case MODULE_IGMP: break;
+N#endif
+N#if (DBG_UDP > 0)
+X#if (0 > 0)
+S    case MODULE_UDP:  break;
+N#endif
+N#if (DBG_TCP > 0)
+X#if (0 > 0)
+S    case MODULE_TCP:  break;
+N#endif
+N#if (DBG_NBNS > 0)
+X#if (0 > 0)
+S    case MODULE_NBNS: break;
+N#endif
+N#if (DBG_DHCP > 0)
+X#if (0 > 0)
+S    case MODULE_DHCP: break;
+N#endif
+N#if (DBG_DNS > 0)
+X#if (0 > 0)
+S    case MODULE_DNS:  break;
+N#endif
+N#if (DBG_SNMP > 0)
+X#if (0 > 0)
+S    case MODULE_SNMP: break;
+N#endif
+N#if (DBG_BSD > 0)
+X#if (0 > 0)
+S    case MODULE_BSD:  break;
+N#endif
+N#if (DBG_HTTP > 0)
+X#if (0 > 0)
+S    case MODULE_HTTP: break;
+N#endif
+N#if (DBG_FTP > 0)
+X#if (0 > 0)
+S    case MODULE_FTP:  break;
+N#endif
+N#if (DBG_FTPC > 0)
+X#if (0 > 0)
+S    case MODULE_FTPC: break;
+N#endif
+N#if (DBG_TNET > 0)
+X#if (0 > 0)
+S    case MODULE_TNET: break;
+N#endif
+N#if (DBG_TFTP > 0)
+X#if (0 > 0)
+S    case MODULE_TFTP: break;
+N#endif
+N#if (DBG_TFTPC > 0)
+X#if (0 > 0)
+S    case MODULE_TFTPC:break;
+N#endif
+N#if (DBG_SMTP > 0)
+X#if (0 > 0)
+S    case MODULE_SMTP: break;
+N#endif
+N#if (DBG_SNTP > 0)
+X#if (0 > 0)
+S    case MODULE_SNTP: break;
+N#endif
+N    default: return;
+N  }
+N#if (DBG_TIME)
+X#if (1)
+N  printf (dbg_time());
+N#endif
+N  printf ("%s-ERR:",dbg_proc(proc));
+N
+N  va_start (args,fmt);
+X  __va_start(args, fmt);
+N  vprintf (fmt,args);
+N  va_end (args);
+X  __va_end(args);
+N}
+N
+N#endif    /* __NET_DEBUG__ */
+N
+N
+N/*----------------------------------------------------------------------------
+N * end of file
+N *---------------------------------------------------------------------------*/
+L 140 "..\..\RL-ARM\Config\Net_Debug.c" 2
+N
+N/*----------------------------------------------------------------------------
+N * end of file
+N *---------------------------------------------------------------------------*/

@@ -1,0 +1,262 @@
+L 1 "..\..\User\stm_flash.c"
+N/**
+N  ********************************  STM32L152RE  *********************************
+N  * @文件名     ： IAP.c
+N  * @作者       ： liyang
+N  * @库版本     ： V1.5.0
+N  * @文件版本   ： V1.0.0
+N  * @日期       ： 2016年11月11日
+N  * @摘要       ： BSP板级支持包源文件
+N  ******************************************************************************/
+N//#include "includes.h"
+N#include "stm_flash.h"
+L 1 "..\..\User\stm_flash.h" 1
+N/**
+N  *********************************  STM32L152RE  ********************************
+N  * @文件名     ： usart.h
+N  * @作者       ： liyang
+N  * @库版本     ： V1.5.0
+N  * @文件版本   ： V1.0.0
+N  * @日期       ： 2016年11月07日
+N  * @摘要       ： BSP板级支持包头文件
+N  ******************************************************************************/
+N
+N/* 定义防止递归包含 ----------------------------------------------------------*/
+N#ifndef _STM_FLASH_H
+N#define _STM_FLASH_H
+N/* Exported types ------------------------------------------------------------*/
+N/* Exported constants --------------------------------------------------------*/
+N
+N/* Exported macro ------------------------------------------------------------*/
+N#define ABS_RETURN(x,y)         (x < y) ? (y-x) : (x-y)
+N
+N//#define FLASH_PAGE_SIZE               0x100     /* 256 Bytes */
+N
+N/* define the address from where user application will be loaded,
+N   the application address should be a start sector address */
+N//#define APPLICATION_ADDRESS   (uint32_t)0x08015000
+N
+N/* define the address from where IAP will be loaded, 0x08000000:BANK1 or 
+N   0x08030000:BANK2 */
+N#define FLASH_START_ADDRESS   (uint32_t)0x08000000
+N
+N/* Get the number of sectors from where the user program will be loaded */
+N#define FLASH_SECTOR_NUMBER  ((uint32_t)(ABS_RETURN(APPLICATION_ADDRESS,FLASH_START_ADDRESS))>>12)
+N
+N#ifdef STM32F2XX
+S  #define USER_FLASH_LAST_PAGE_ADDRESS  0x0801FF00
+S  #define USER_FLASH_END_ADDRESS        0x0801FFFF
+S  /* Compute the mask to test if the Flash memory, where the user program will be
+S  loaded, is write protected */
+S  #define  FLASH_PROTECTED_SECTORS   ((uint32_t)~((1 << FLASH_SECTOR_NUMBER) - 1))
+N#elif defined STM32F40_41xxx
+X#elif 1L
+N  #define USER_FLASH_LAST_PAGE_ADDRESS  0x0807FF00
+N  /* define the address from where user application will be loaded,
+N   the application address should be a start sector address */
+N  #define USER_FLASH_END_ADDRESS        0x0807FFFF
+N  
+N#else
+S #error "Please select first the STM32 device to be used (in stm32l1xx.h)"    
+N#endif 
+N/* define the user application size */
+N#define USER_FLASH_SIZE   (USER_FLASH_END_ADDRESS - APPLICATION_ADDRESS + 1)
+Nextern unsigned char  AT_QIOPEN_Pri[];
+N/* Exported macro ------------------------------------------------------------*/
+N/* Exported functions ------------------------------------------------------- */
+Nvoid FLASH_If_Init(void);
+E "..\..\User\stm_flash.h" 54 1 identifier "uint32_t" is undefined
+E "..\..\User\stm_flash.h" 54 25 identifier "uint32_t" is undefined
+Nuint32_t FLASH_If_Erase(uint32_t StartSector);
+E "..\..\User\stm_flash.h" 55 1 identifier "uint32_t" is undefined
+E "..\..\User\stm_flash.h" 55 25 identifier "uint32_t" is undefined
+E "..\..\User\stm_flash.h" 55 49 identifier "uint32_t" is undefined
+E "..\..\User\stm_flash.h" 55 65 identifier "uint16_t" is undefined
+Nuint32_t FLASH_If_Write(uint32_t* FlashAddress, uint32_t* Data, uint16_t DataLength);
+Nvoid FLASH_If_DisableWriteProtection(void);
+Nvoid SaveParam(void);
+Nvoid LoadParam(void);
+Nvoid FLASH_If_EnableWriteProtection(void);
+N
+N
+N
+N#endif /* _BSP_H */
+N
+N
+L 12 "..\..\User\stm_flash.c" 2
+N///////////////////////////////////////////////////////////////////////////////////
+N#define WRITE_PROTECTION_DISABLE
+N#define FLASH_PAGE_TO_BE_PROTECTED     ((uint32_t)0x00000004 | (uint32_t)0x00000008)  
+N
+N#define DATA_32                     ((uint32_t)0x12345678)
+Nunsigned char  AT_QIOPEN[40];
+N/* Check the status of the switches */
+N/* Enable by default the disable protection */
+N#if !defined(WRITE_PROTECTION_ENABLE)&&!defined(WRITE_PROTECTION_DISABLE)
+X#if !0L&&!1L
+S#define WRITE_PROTECTION_DISABLE
+N#endif /* !WRITE_PROTECTION_ENABLE && !WRITE_PROTECTION_DISABLE */
+N
+N/* Both switches cannot be enabled in the same time */
+N#if defined(WRITE_PROTECTION_ENABLE)&&defined(WRITE_PROTECTION_DISABLE)
+X#if 0L&&1L
+S#error "Switches WRITE_PROTECTION_ENABLE & WRITE_PROTECTION_DISABLE cannot be enabled in the time!"
+N#endif /* WRITE_PROTECTION_ENABLE && WRITE_PROTECTION_DISABLE */
+N
+N/* Private macro -------------------------------------------------------------*/
+N/* Private variables ---------------------------------------------------------*/
+E "..\..\User\stm_flash.c" 31 1 identifier "uint32_t" is undefined
+Nuint32_t Address = 0;
+E "..\..\User\stm_flash.c" 32 1 identifier "uint32_t" is undefined
+Nuint32_t PageError = 0;
+E "..\..\User\stm_flash.c" 33 1 identifier "uint32_t" is undefined
+Nuint32_t ProtectedPAGE = 0x0;
+N/*Variable used for Erase procedure*/
+E "..\..\User\stm_flash.c" 35 8 identifier "FLASH_EraseInitTypeDef" is undefined
+Nstatic FLASH_EraseInitTypeDef EraseInitStruct;
+N/*Variable used to handle the Options Bytes*/
+E "..\..\User\stm_flash.c" 37 8 identifier "FLASH_OBProgramInitTypeDef" is undefined
+Nstatic FLASH_OBProgramInitTypeDef OptionsBytesStruct;
+N/**
+N  * @brief  Unlocks Flash for write access
+N  * @param  None
+N  * @retval None
+N  */
+Nvoid FLASH_If_Init(void)
+N{ 
+N  /* Unlock the Program memory */
+W "..\..\User\stm_flash.c" 46 3 function "HAL_FLASH_Unlock" declared implicitly
+N  HAL_FLASH_Unlock();
+N	/* Unlock the Options Bytes **/
+W "..\..\User\stm_flash.c" 48 3 function "HAL_FLASH_OB_Unlock" declared implicitly
+N  HAL_FLASH_OB_Unlock();
+N	/* Get pages write protection status**/
+W "..\..\User\stm_flash.c" 50 3 function "HAL_FLASHEx_OBGetConfig" declared implicitly
+N  HAL_FLASHEx_OBGetConfig(&OptionsBytesStruct);
+N}
+N
+N/**
+N  * @brief  This function does an erase of all user flash area
+N  * @param  StartSector: start of user flash area
+N  * @retval 0: user flash area successfully erased
+N  *         1: error occurred
+N  */
+E "..\..\User\stm_flash.c" 59 1 identifier "uint32_t" is undefined
+E "..\..\User\stm_flash.c" 59 25 identifier "uint32_t" is undefined
+Nuint32_t FLASH_If_Erase(uint32_t StartSector)
+N{
+N#ifdef WRITE_PROTECTION_DISABLE
+N  /* Check if desired pages are already write protected ***********************/
+E "..\..\User\stm_flash.c" 63 43 identifier "uint32_t" is undefined
+E "..\..\User\stm_flash.c" 63 43 expected a ")"
+E "..\..\User\stm_flash.c" 63 74 expected a ")"
+N  if((OptionsBytesStruct.WRPSector0To31 & FLASH_PAGE_TO_BE_PROTECTED) == FLASH_PAGE_TO_BE_PROTECTED)
+X  if((OptionsBytesStruct.WRPSector0To31 & ((uint32_t)0x00000004 | (uint32_t)0x00000008)) == ((uint32_t)0x00000004 | (uint32_t)0x00000008))
+N  {
+N    /* Restore write protected pages */
+E "..\..\User\stm_flash.c" 66 39 identifier "OPTIONBYTE_WRP" is undefined
+N    OptionsBytesStruct.OptionType   = OPTIONBYTE_WRP;
+E "..\..\User\stm_flash.c" 67 39 identifier "OB_WRPSTATE_DISABLE" is undefined
+N    OptionsBytesStruct.WRPState     = OB_WRPSTATE_DISABLE;
+E "..\..\User\stm_flash.c" 68 41 expected a ")"
+N    OptionsBytesStruct.WRPSector0To31 = FLASH_PAGE_TO_BE_PROTECTED;
+X    OptionsBytesStruct.WRPSector0To31 = ((uint32_t)0x00000004 | (uint32_t)0x00000008);
+W "..\..\User\stm_flash.c" 69 8 function "HAL_FLASHEx_OBProgram" declared implicitly
+E "..\..\User\stm_flash.c" 69 54 identifier "HAL_OK" is undefined
+N    if(HAL_FLASHEx_OBProgram(&OptionsBytesStruct) != HAL_OK)
+N    {
+N      /* Error occurred while options bytes programming. **********************/
+N      while (1)
+N      {
+W "..\..\User\stm_flash.c" 74 9 function "HAL_Delay" declared implicitly
+N        HAL_Delay(2000);
+N				break;
+N      }
+N    }
+N
+N    /* Generate System Reset to load the new option byte values ***************/
+W "..\..\User\stm_flash.c" 80 5 function "HAL_FLASH_OB_Launch" declared implicitly
+N    HAL_FLASH_OB_Launch();
+N  }
+N#elif defined WRITE_PROTECTION_ENABLE
+S  /* Get current write protected pages and the new pages to be protected ******/
+S  ProtectedPAGE =  OptionsBytesStruct.WRPSector0To31 | FLASH_PAGE_TO_BE_PROTECTED; 
+S  /* Check if desired pages are not yet write protected ***********************/
+S  if((OptionsBytesStruct.WRPSector0To31 & FLASH_PAGE_TO_BE_PROTECTED )!= FLASH_PAGE_TO_BE_PROTECTED)
+S  {
+S    /* Enable the pages write protection **************************************/
+S    OptionsBytesStruct.OptionType = OPTIONBYTE_WRP;
+S    OptionsBytesStruct.WRPState   = OB_WRPSTATE_ENABLE;
+S    OptionsBytesStruct.WRPSector0To31    = FLASH_PAGE_TO_BE_PROTECTED;
+S    if(HAL_FLASHEx_OBProgram(&OptionsBytesStruct) != HAL_OK)
+S    {
+S      /* Error occurred while options bytes programming. **********************/
+S      while (1)
+S      {
+S        HAL_Delay(2000);
+S				break;
+S      }
+S    }
+S
+S    /* Generate System Reset to load the new option byte values ***************/
+S    HAL_FLASH_OB_Launch();
+S  }
+N#endif /* WRITE_PROTECTION_DISABLE */
+N  /* Lock the Options Bytes *************************************************/
+W "..\..\User\stm_flash.c" 107 3 function "HAL_FLASH_OB_Lock" declared implicitly
+N  HAL_FLASH_OB_Lock();	
+N  /* The selected pages are not write protected *******************************/
+E "..\..\User\stm_flash.c" 109 44 expected a ")"
+N  if ((OptionsBytesStruct.WRPSector0To31 & FLASH_PAGE_TO_BE_PROTECTED) == 0x00)
+X  if ((OptionsBytesStruct.WRPSector0To31 & ((uint32_t)0x00000004 | (uint32_t)0x00000008)) == 0x00)
+N  {
+N    /* Fill EraseInit structure************************************************/
+E "..\..\User\stm_flash.c" 112 35 identifier "FLASH_TYPEERASE_PAGES" is undefined
+N    EraseInitStruct.TypeErase   = FLASH_TYPEERASE_PAGES;
+N    EraseInitStruct.PageAddress = StartSector;
+E "..\..\User\stm_flash.c" 114 74 identifier "FLASH_PAGE_SIZE" is undefined
+N   	EraseInitStruct.NbPages     = (USER_FLASH_END_ADDRESS - StartSector)/FLASH_PAGE_SIZE;
+X   	EraseInitStruct.NbPages     = (0x0807FFFF - StartSector)/FLASH_PAGE_SIZE;
+N
+W "..\..\User\stm_flash.c" 116 9 function "HAL_FLASHEx_Erase" declared implicitly
+E "..\..\User\stm_flash.c" 116 60 identifier "HAL_OK" is undefined
+N    if (HAL_FLASHEx_Erase(&EraseInitStruct, &PageError) != HAL_OK)
+N    {
+N      while (1)
+N      {
+W "..\..\User\stm_flash.c" 120 9 function "HAL_Delay" declared implicitly
+N        HAL_Delay(2000);
+N				break;
+N      }
+N    }
+N  }		
+N	return 1;
+N}
+N
+N/**
+N  * @brief  This function writes a data buffer in flash (data are 32-bit aligned).
+N  * @note   After writing data buffer, the flash content is checked.
+N  * @param  FlashAddress: start address for writing data buffer
+N  * @param  Data: pointer on data buffer
+N  * @param  DataLength: length of data buffer (unit is 32-bit word)   
+N  * @retval 0: Data successfully written to Flash memory
+N  *         1: Error occurred while writing data in Flash memory
+N  *         2: Written Data in flash memory is different from expected one
+N  */
+E "..\..\User\stm_flash.c" 138 1 identifier "uint32_t" is undefined
+E "..\..\User\stm_flash.c" 138 25 identifier "uint32_t" is undefined
+E "..\..\User\stm_flash.c" 138 49 identifier "uint32_t" is undefined
+E "..\..\User\stm_flash.c" 138 65 identifier "uint16_t" is undefined
+Nuint32_t FLASH_If_Write(uint32_t* FlashAddress, uint32_t* Data ,uint16_t DataLength)
+N{
+E "..\..\User\stm_flash.c" 140 3 identifier "uint32_t" is undefined
+N  uint32_t i = 0;
+N  for (i = 0; (i < DataLength) && (*FlashAddress <= (USER_FLASH_END_ADDRESS-4)); i++)
+X  for (i = 0; (i < DataLength) && (*FlashAddress <= (0x0807FFFF-4)); i++)
+N  {
+N    /* Device voltage range supposed to be [2.7V to 3.6V], the operation will
+N       be done by word */ 
+W "..\..\User\stm_flash.c" 145 9 function "HAL_FLASH_Program" declared implicitly
+E "..\..\User\stm_flash.c" 145 27 identifier "FLASH_TYPEPROGRAM_WORD" is undefined
+C "" 0 0 error limit reached
+N    if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,*FlashAddress, *(uint32_t*)(Data+i)) == HAL_OK)

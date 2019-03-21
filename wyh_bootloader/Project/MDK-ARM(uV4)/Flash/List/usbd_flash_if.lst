@@ -1,0 +1,135 @@
+L 1 "..\..\User\usbd_flash_if.c"
+N/**
+N  ******************************************************************************
+N  * @file    usbd_flash_if.c
+N  * @author  MCD Application Team
+N  * @version V1.1.0
+N  * @date    19-March-2012
+N  * @brief   Specific media access Layer for internal flash.
+N  ******************************************************************************
+N  * @attention
+N  *
+N  * <h2><center>&copy; COPYRIGHT 2012 STMicroelectronics</center></h2>
+N  *
+N  * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
+N  * You may not use this file except in compliance with the License.
+N  * You may obtain a copy of the License at:
+N  *
+N  *        http://www.st.com/software_license_agreement_liberty_v2
+N  *
+N  * Unless required by applicable law or agreed to in writing, software 
+N  * distributed under the License is distributed on an "AS IS" BASIS, 
+N  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+N  * See the License for the specific language governing permissions and
+N  * limitations under the License.
+N  *
+N  ******************************************************************************
+N  */ 
+N
+N/* Includes ------------------------------------------------------------------*/
+N#include "usbd_flash_if.h"
+L 1 "..\..\User\usbd_flash_if.h" 1
+N/**
+N  ******************************************************************************
+N  * @file    usbd_flash_if.h
+N  * @author  MCD Application Team
+N  * @version V1.1.0
+N  * @date    19-March-2012
+N  * @brief   Header for usbd_flash_if.c file.
+N  ******************************************************************************
+N  * @attention
+N  *
+N  * <h2><center>&copy; COPYRIGHT 2012 STMicroelectronics</center></h2>
+N  *
+N  * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
+N  * You may not use this file except in compliance with the License.
+N  * You may obtain a copy of the License at:
+N  *
+N  *        http://www.st.com/software_license_agreement_liberty_v2
+N  *
+N  * Unless required by applicable law or agreed to in writing, software 
+N  * distributed under the License is distributed on an "AS IS" BASIS, 
+N  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+N  * See the License for the specific language governing permissions and
+N  * limitations under the License.
+N  *
+N  ******************************************************************************
+N  */
+N
+N/* Define to prevent recursive inclusion -------------------------------------*/
+N#ifndef __FLASH_IF_MAL_H
+N#define __FLASH_IF_MAL_H
+N
+N/* Includes ------------------------------------------------------------------*/
+N#include "usbd_dfu_mal.h"
+L 1 "..\..\User\usbd_dfu_mal.h" 1
+N/**
+N  ******************************************************************************
+N  * @file    usbd_dfu_mal.h
+N  * @author  MCD Application Team
+N  * @version V1.1.0
+N  * @date    19-March-2012
+N  * @brief   Header for usbd_dfu_mal.c file.
+N  ******************************************************************************
+N  * @attention
+N  *
+N  * <h2><center>&copy; COPYRIGHT 2012 STMicroelectronics</center></h2>
+N  *
+N  * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
+N  * You may not use this file except in compliance with the License.
+N  * You may obtain a copy of the License at:
+N  *
+N  *        http://www.st.com/software_license_agreement_liberty_v2
+N  *
+N  * Unless required by applicable law or agreed to in writing, software 
+N  * distributed under the License is distributed on an "AS IS" BASIS, 
+N  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+N  * See the License for the specific language governing permissions and
+N  * limitations under the License.
+N  *
+N  ******************************************************************************
+N  */
+N
+N/* Define to prevent recursive inclusion -------------------------------------*/
+N#ifndef __DFU_MAL_H
+N#define __DFU_MAL_H
+N
+N/* Includes ------------------------------------------------------------------*/
+N//#include "usb_conf.h"
+N
+N#include "usbd_conf_template.h"
+L 1 "..\..\Libraries\STM32_USB_Device_Library\Core\inc\usbd_conf_template.h" 1
+N/**
+N  ******************************************************************************
+N  * @file    usbd_conf_template.h
+N  * @author  MCD Application Team
+N  * @version V1.1.0
+N  * @date    19-March-2012
+N  * @brief   usb device configuration template file
+N  ******************************************************************************
+N  * @attention
+N  *
+N  * <h2><center>&copy; COPYRIGHT 2012 STMicroelectronics</center></h2>
+N  *
+N  * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
+N  * You may not use this file except in compliance with the License.
+N  * You may obtain a copy of the License at:
+N  *
+N  *        http://www.st.com/software_license_agreement_liberty_v2
+N  *
+N  * Unless required by applicable law or agreed to in writing, software 
+N  * distributed under the License is distributed on an "AS IS" BASIS, 
+N  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+N  * See the License for the specific language governing permissions and
+N  * limitations under the License.
+N  *
+N  ******************************************************************************
+N  */
+N
+N/* Define to prevent recursive inclusion -------------------------------------*/
+N#ifndef __USBD_CONF__H__
+N#define __USBD_CONF__H__
+N
+N/* Includes ------------------------------------------------------------------*/
+C "..\..\Libraries\STM32_USB_Device_Library\Core\inc\usbd_conf_template.h" 33 31 cannot open source input file "usb_conf_template.h": No such file or directory
+N#include "usb_conf_template.h"

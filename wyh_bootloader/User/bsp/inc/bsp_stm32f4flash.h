@@ -1,0 +1,28 @@
+#ifndef __STM32F4FLASH_H
+#define __STM32F4FLASH_H
+
+#include "stm32f4xx.h"
+
+#define STM32_FLASH_BASE 0x08000000 //STM32的FLASH起始地址
+
+//#define ADDR_FLASH_SECTOR_0  ((u32)0x08000000)//16KB
+//#define ADDR_FLASH_SECTOR_1  ((u32)0x08004000)//16KB
+//#define ADDR_FLASH_SECTOR_2  ((u32)0x08008000)//16KB
+//#define ADDR_FLASH_SECTOR_3  ((u32)0x0800C000)//16KB
+//#define ADDR_FLASH_SECTOR_4  ((u32)0x08010000)//64KB
+//#define ADDR_FLASH_SECTOR_5  ((u32)0x08020000)//128KB
+//#define ADDR_FLASH_SECTOR_6  ((u32)0x08040000)//128KB
+//#define ADDR_FLASH_SECTOR_7  ((u32)0x08060000)//128KB
+//#define ADDR_FLASH_SECTOR_8  ((u32)0x08080000)//128KB
+//#define ADDR_FLASH_SECTOR_9  ((u32)0x080A0000)//128KB
+//#define ADDR_FLASH_SECTOR_10 ((u32)0x080C0000)//128KB
+//#define ADDR_FLASH_SECTOR_11 ((u32)0x080E0000)//128KB
+
+u32 STM32F4FLASH_ReadWord(u32 FlashAddr);
+FLASH_Status STM32F4FLASH_CheckEmpty(u32 StartAddr,u32 EndAddr);
+void STM32F4FLASH_Write(u32 WriteAddr,u32 *pBuffer,u32 NumToWrite);
+void STM32F4FLASH_Read(u32 ReadAddr,u32 *pBuffer,u32 NumToRead);
+
+
+
+#endif

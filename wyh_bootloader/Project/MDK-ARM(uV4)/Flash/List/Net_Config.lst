@@ -1,0 +1,3332 @@
+L 1 "..\..\RL-ARM\Config\Net_Config.c"
+N/*----------------------------------------------------------------------------
+N *      RL-ARM - TCPnet
+N *----------------------------------------------------------------------------
+N *      Name:    NET_CONFIG.C
+N *      Purpose: Configuration of RL TCPnet by user
+N *      Rev.:    V4.72
+N *----------------------------------------------------------------------------
+N *      This code is part of the RealView Run-Time Library.
+N *      Copyright (c) 2004-2013 KEIL - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#include <Net_Config.h>
+L 1 "..\..\RL-ARM\Config\Net_Config.h" 1
+N/*----------------------------------------------------------------------------
+N *      RL-ARM - TCPnet
+N *----------------------------------------------------------------------------
+N *      Name:    NET_CONFIG.H
+N *      Purpose: Common TCPnet Definitions
+N *      Rev.:    V4.73
+N *----------------------------------------------------------------------------
+N *      This code is part of the RealView Run-Time Library.
+N *      Copyright (c) 2004-2013 KEIL - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#ifndef __NET_CONFIG_H__
+N#define __NET_CONFIG_H__
+N
+N#include <RTL.h>
+L 1 "..\..\RL-ARM\RL-RTX\inc\RTL.h" 1
+N/*----------------------------------------------------------------------------
+N *      RL-ARM - A P I 
+N *----------------------------------------------------------------------------
+N *      Name:    RTL.H 
+N *      Purpose: Application Programming Interface 
+N *      Rev.:    V4.73
+N *----------------------------------------------------------------------------
+N *      This code is part of the RealView Run-Time Library.
+N *      Copyright (c) 2004-2013 KEIL - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#ifndef __RTL_H__
+N#define __RTL_H__
+N
+N/* RL-ARM version number. */
+N#define __RL_ARM_VER    473
+N 
+N#define __task          __declspec(noreturn)
+N#define __used          __attribute__((used))
+N
+N#ifndef NULL
+N #ifdef __cplusplus
+S  #define NULL          0
+N #else
+N  #define NULL          ((void *) 0)
+N #endif
+N#endif
+N
+N#ifndef EOF
+N #define EOF            (-1)
+N#endif
+N
+N#ifndef __size_t
+N #define __size_t       1
+N typedef unsigned int   size_t;
+N#endif
+N
+Ntypedef signed char     S8;
+Ntypedef unsigned char   U8;
+Ntypedef short           S16;
+Ntypedef unsigned short  U16;
+Ntypedef int             S32;
+Ntypedef unsigned int    U32;
+Ntypedef long long       S64;
+Ntypedef unsigned long long U64;
+Ntypedef unsigned char   BIT;
+Ntypedef unsigned int    BOOL;
+N
+N#ifndef __TRUE
+N #define __TRUE         1
+N#endif
+N#ifndef __FALSE
+N #define __FALSE        0
+N#endif
+N
+N#ifdef __BIG_ENDIAN
+S #define U32_LE(v)      (U32)(__rev(v))
+S #define U16_LE(v)      (U16)(__rev(v) >> 16)
+S #define U32_BE(v)      (U32)(v)
+S #define U16_BE(v)      (U16)(v)
+N#else
+N #define U32_BE(v)      (U32)(__rev(v))
+N #define U16_BE(v)      (U16)(__rev(v) >> 16)
+N #define U32_LE(v)      (U32)(v)
+N #define U16_LE(v)      (U16)(v)
+N#endif
+N#define ntohs(v)        U16_BE(v)
+N#define ntohl(v)        U32_BE(v)
+N#define htons(v)        ntohs(v)
+N#define htonl(v)        ntohl(v)
+N
+N/*----------------------------------------------------------------------------
+N *                             RTX Kernel API
+N *---------------------------------------------------------------------------*/
+N
+N#ifdef __cplusplus
+Sextern "C"  {
+N#endif
+N
+N/* Definition of Semaphore type */
+Ntypedef U32 OS_SEM[2];
+N
+N/* Definition of Mailbox type */
+N#define os_mbx_declare(name,cnt)    U32 name [4 + cnt]
+Ntypedef U32 OS_MBX[];
+N
+N/* Definition of Mutex type */
+Ntypedef U32 OS_MUT[4];
+N
+N/* Task Identification number. */
+Ntypedef U32 OS_TID;
+N
+N/* Function return of system calls returning an object identification */
+Ntypedef void *OS_ID;
+N
+N/* Function return of system calls indicating an event or completion state */
+Ntypedef U32 OS_RESULT;
+N
+N/* Return codes */
+N#define OS_R_TMO        0x01
+N#define OS_R_EVT        0x02
+N#define OS_R_SEM        0x03
+N#define OS_R_MBX        0x04
+N#define OS_R_MUT        0x05
+N
+N#define OS_R_OK         0x00
+N#define OS_R_NOK        0xff
+N
+N#define OS_TCB_SIZE     56
+N#define OS_TMR_SIZE     8
+N
+N/* Error Codes */
+N#define OS_ERR_STK_OVF  1
+N#define OS_ERR_FIFO_OVF 2
+N#define OS_ERR_MBX_OVF  3
+N
+N#if !(__TARGET_ARCH_6S_M || __TARGET_ARCH_7_M || __TARGET_ARCH_7E_M)
+X#if !(__TARGET_ARCH_6S_M || __TARGET_ARCH_7_M || 1)
+S
+S/*----------------------------------------------------------------------------
+S *      Functions ARM
+S *---------------------------------------------------------------------------*/
+S
+S/* Task Management */
+S#define os_sys_init(tsk)              os_sys_init0(tsk,0,NULL)
+S#define os_sys_init_prio(tsk,prio)    os_sys_init0(tsk,prio,NULL)
+S#define os_sys_init_user(tsk,prio,stk,size)                                   \
+S                                      os_sys_init0(tsk,prio|(size<<8),stk)
+X#define os_sys_init_user(tsk,prio,stk,size)                                                                         os_sys_init0(tsk,prio|(size<<8),stk)
+S#define os_tsk_create(tsk,prio)       os_tsk_create0(tsk,prio,NULL,NULL)
+S#define os_tsk_create_user(tsk,prio,stk,size)                                 \
+S                                      os_tsk_create0(tsk,prio|(size<<8),stk,NULL)
+X#define os_tsk_create_user(tsk,prio,stk,size)                                                                       os_tsk_create0(tsk,prio|(size<<8),stk,NULL)
+S#define os_tsk_create_ex(tsk,prio,argv) os_tsk_create_ex0(tsk,prio,NULL,argv)
+S#define os_tsk_create_user_ex(tsk,prio,stk,size,argv)                         \
+S                                      os_tsk_create_ex0(tsk,prio|(size<<8),stk,argv)
+X#define os_tsk_create_user_ex(tsk,prio,stk,size,argv)                                                               os_tsk_create_ex0(tsk,prio|(size<<8),stk,argv)
+S#define os_tsk_delete_self()          os_tsk_delete(0)
+S#define os_tsk_prio_self(prio)        os_tsk_prio(0,prio)
+S#define isr_tsk_get()                 os_tsk_self()
+S
+Sextern void      os_sys_init0 (void (*task)(void), U32 prio_stksz, void *stk);
+Sextern OS_TID    os_tsk_create0 (void (*task)(void), U32 prio_stksz, 
+S                                 void *stk, void *argv);
+Sextern OS_TID    os_tsk_create_ex0 (void (*task)(void *), U32 prio_stksz, 
+S                                    void *stk, void *argv);
+Sextern OS_TID    os_tsk_self (void);
+Sextern void      os_tsk_pass (void);
+Sextern OS_RESULT os_tsk_prio (OS_TID task_id, U8 new_prio);
+Sextern OS_RESULT os_tsk_delete (OS_TID task_id);
+S
+S/* Event flag Management */
+S#define os_evt_wait_or(wflags,tmo)      os_evt_wait(wflags,tmo,__FALSE)
+S#define os_evt_wait_and(wflags,tmo)     os_evt_wait(wflags,tmo,__TRUE)
+S
+Sextern OS_RESULT os_evt_wait (U16 wait_flags, U16 timeout, BOOL and_wait);
+Sextern void      os_evt_set (U16 event_flags, OS_TID task_id);
+Sextern void      os_evt_clr (U16 clear_flags, OS_TID task_id);
+Sextern void      isr_evt_set (U16 event_flags, OS_TID task_id);
+Sextern U16       os_evt_get (void);
+S
+S/* Semaphore Management */
+Sextern void      os_sem_init (OS_ID semaphore, U16 token_count);
+Sextern OS_RESULT os_sem_send (OS_ID semaphore);
+Sextern OS_RESULT os_sem_wait (OS_ID semaphore, U16 timeout);
+Sextern void      isr_sem_send (OS_ID semaphore);
+S
+S/* Mailbox Management */
+S#define isr_mbx_check(mbx)              os_mbx_check(mbx)
+S
+Sextern void      os_mbx_init (OS_ID mailbox, U16 mbx_size);
+Sextern OS_RESULT os_mbx_send (OS_ID mailbox, void *message_ptr, U16 timeout);
+Sextern OS_RESULT os_mbx_wait (OS_ID mailbox, void  **message, U16 timeout);
+Sextern OS_RESULT os_mbx_check (OS_ID mailbox);
+Sextern void      isr_mbx_send (OS_ID mailbox, void *message_ptr);
+Sextern OS_RESULT isr_mbx_receive (OS_ID mailbox, void **message);
+S
+S/* Mutex Management */
+Sextern void      os_mut_init (OS_ID mutex);
+Sextern OS_RESULT os_mut_release (OS_ID mutex);
+Sextern OS_RESULT os_mut_wait (OS_ID mutex, U16 timeout);
+S
+S/* Time Management */
+Sextern U32       os_time_get (void);
+Sextern void      os_dly_wait (U16 delay_time);
+Sextern void      os_itv_set (U16 interval_time);
+Sextern void      os_itv_wait (void);
+S
+S/* User Timer Management */
+Sextern OS_ID     os_tmr_create (U16 tcnt, U16 info);
+Sextern OS_ID     os_tmr_kill (OS_ID timer);
+S
+S/* System Functions */
+Sextern U32       os_suspend (void);
+Sextern void      os_resume (U32 sleep_time);
+Sextern void      tsk_lock (void) __swi (5);
+Sextern void      tsk_unlock (void);
+S
+S/* Fixed Memory Block Management Functions */
+Sextern int       _init_box (void *box_mem, U32 box_size, U32 blk_size);
+Sextern void     *_alloc_box (void *box_mem) __swi (1);
+Sextern void     *_calloc_box (void *box_mem);
+Sextern int       _free_box (void *box_mem, void *box) __swi (2);
+S
+N#else
+N
+N/*----------------------------------------------------------------------------
+N *      Functions Cortex-M
+N *---------------------------------------------------------------------------*/
+N
+N#define __SVC_0         __svc_indirect(0)
+N
+N/* Task Management */
+Nextern void      os_set_env    (void);
+Nextern void      rt_sys_init   (void (*task)(void), U8 priority, void *stk);
+Nextern void      rt_tsk_pass   (void);
+Nextern OS_TID    rt_tsk_self   (void);
+Nextern OS_RESULT rt_tsk_prio   (OS_TID task_id, U8 new_prio);
+Nextern OS_TID    rt_tsk_create (void (*task)(void), U8 priority, void *stk, void *argv);
+Nextern OS_RESULT rt_tsk_delete (OS_TID task_id);
+N
+N#define os_sys_init(tsk)              os_set_env();                           \
+N                                      _os_sys_init((U32)rt_sys_init,tsk,0,NULL)
+X#define os_sys_init(tsk)              os_set_env();                                                                 _os_sys_init((U32)rt_sys_init,tsk,0,NULL)
+N#define os_sys_init_user(tsk,prio,stk,size)                                   \
+N                                      os_set_env();                           \
+N                                      _os_sys_init((U32)rt_sys_init,tsk,prio|(size<<8),stk)
+X#define os_sys_init_user(tsk,prio,stk,size)                                                                         os_set_env();                                                                 _os_sys_init((U32)rt_sys_init,tsk,prio|(size<<8),stk)
+N#define os_sys_init_prio(tsk,prio)    os_set_env();                           \
+N                                      _os_sys_init((U32)rt_sys_init,tsk,prio,NULL)
+X#define os_sys_init_prio(tsk,prio)    os_set_env();                                                                 _os_sys_init((U32)rt_sys_init,tsk,prio,NULL)
+N#define os_tsk_create(tsk,prio)       _os_tsk_create((U32)rt_tsk_create,tsk,prio,NULL,NULL)
+N#define os_tsk_create_user(tsk,prio,stk,size)                                 \
+N                                      _os_tsk_create((U32)rt_tsk_create,tsk,prio|(size<<8),stk,NULL)
+X#define os_tsk_create_user(tsk,prio,stk,size)                                                                       _os_tsk_create((U32)rt_tsk_create,tsk,prio|(size<<8),stk,NULL)
+N#define os_tsk_create_ex(tsk,prio,argv) _os_tsk_create_ex((U32)rt_tsk_create,tsk,prio,NULL,argv)
+N#define os_tsk_create_user_ex(tsk,prio,stk,size,argv)                         \
+N                                      _os_tsk_create_ex((U32)rt_tsk_create,tsk,prio|(size<<8),stk,argv)
+X#define os_tsk_create_user_ex(tsk,prio,stk,size,argv)                                                               _os_tsk_create_ex((U32)rt_tsk_create,tsk,prio|(size<<8),stk,argv)
+N#define os_tsk_self()                 _os_tsk_self((U32)rt_tsk_self)
+N#define os_tsk_pass()                 _os_tsk_pass((U32)rt_tsk_pass)
+N#define os_tsk_prio(task_id,new_prio) _os_tsk_prio((U32)rt_tsk_prio,task_id,new_prio)
+N#define os_tsk_prio_self(prio)        _os_tsk_prio((U32)rt_tsk_prio,0,prio)
+N#define os_tsk_delete(task_id)        _os_tsk_delete((U32)rt_tsk_delete,task_id)
+N#define os_tsk_delete_self()          _os_tsk_delete((U32)rt_tsk_delete, 0)
+N#define isr_tsk_get()                 rt_tsk_self()
+N
+Nextern void      _os_sys_init(U32 p, void (*task)(void), U32 prio_stksz,
+N                                     void *stk)                        __SVC_0;
+X                                     void *stk)                        __svc_indirect(0);
+Nextern OS_TID    _os_tsk_create (U32 p, void (*task)(void), U32 prio_stksz,
+N                                        void *stk, void *argv)         __SVC_0;
+X                                        void *stk, void *argv)         __svc_indirect(0);
+Nextern OS_TID    _os_tsk_create_ex (U32 p, void (*task)(void *), U32 prio_stksz,
+N                                           void *stk, void *argv)      __SVC_0;
+X                                           void *stk, void *argv)      __svc_indirect(0);
+Nextern OS_TID    _os_tsk_self (U32 p)                                  __SVC_0;
+Xextern OS_TID    _os_tsk_self (U32 p)                                  __svc_indirect(0);
+Nextern void      _os_tsk_pass (U32 p)                                  __SVC_0;
+Xextern void      _os_tsk_pass (U32 p)                                  __svc_indirect(0);
+Nextern OS_RESULT _os_tsk_prio (U32 p, OS_TID task_id, U8 new_prio)     __SVC_0;
+Xextern OS_RESULT _os_tsk_prio (U32 p, OS_TID task_id, U8 new_prio)     __svc_indirect(0);
+Nextern OS_RESULT _os_tsk_delete (U32 p, OS_TID task_id)                __SVC_0;
+Xextern OS_RESULT _os_tsk_delete (U32 p, OS_TID task_id)                __svc_indirect(0);
+N
+N/* Event flag Management */
+Nextern OS_RESULT rt_evt_wait (U16 wait_flags,  U16 timeout, BOOL and_wait);
+Nextern void      rt_evt_set  (U16 event_flags, OS_TID task_id);
+Nextern void      rt_evt_clr  (U16 clear_flags, OS_TID task_id);
+Nextern U16       rt_evt_get  (void);
+N
+N#define os_evt_wait_or(wflags,tmo)    _os_evt_wait((U32)rt_evt_wait,wflags,tmo,__FALSE)
+N#define os_evt_wait_and(wflags,tmo)   _os_evt_wait((U32)rt_evt_wait,wflags,tmo,__TRUE)
+N#define os_evt_set(evt_flags,task_id) _os_evt_set((U32)rt_evt_set,evt_flags,task_id)
+N#define os_evt_clr(clr_flags,task_id) _os_evt_clr((U32)rt_evt_clr,clr_flags,task_id)
+N#define os_evt_get()                  _os_evt_get((U32)rt_evt_get)
+N
+Nextern OS_RESULT _os_evt_wait(U32 p, U16 wait_flags, U16 timeout,
+N                                     BOOL and_wait)                    __SVC_0;
+X                                     BOOL and_wait)                    __svc_indirect(0);
+Nextern void      _os_evt_set (U32 p, U16 event_flags, OS_TID task_id)  __SVC_0;
+Xextern void      _os_evt_set (U32 p, U16 event_flags, OS_TID task_id)  __svc_indirect(0);
+Nextern void      _os_evt_clr (U32 p, U16 clear_flags, OS_TID task_id)  __SVC_0;
+Xextern void      _os_evt_clr (U32 p, U16 clear_flags, OS_TID task_id)  __svc_indirect(0);
+Nextern U16       _os_evt_get (U32 p)                                   __SVC_0;
+Xextern U16       _os_evt_get (U32 p)                                   __svc_indirect(0);
+Nextern void      isr_evt_set (U16 event_flags, OS_TID task_id);
+N
+N/* Semaphore Management */
+Nextern void      rt_sem_init (OS_ID semaphore, U16 token_count);
+Nextern OS_RESULT rt_sem_send (OS_ID semaphore);
+Nextern OS_RESULT rt_sem_wait (OS_ID semaphore, U16 timeout);
+N
+N#define os_sem_init(sem,t_count)     _os_sem_init((U32)rt_sem_init,sem,t_count)
+N#define os_sem_send(sem)             _os_sem_send((U32)rt_sem_send,sem)
+N#define os_sem_wait(sem,tmo)         _os_sem_wait((U32)rt_sem_wait,sem,tmo)
+N
+Nextern void      _os_sem_init (U32 p, OS_ID semaphore, 
+N                                      U16 token_count)                 __SVC_0;
+X                                      U16 token_count)                 __svc_indirect(0);
+Nextern OS_RESULT _os_sem_send (U32 p, OS_ID semaphore)                 __SVC_0;
+Xextern OS_RESULT _os_sem_send (U32 p, OS_ID semaphore)                 __svc_indirect(0);
+Nextern OS_RESULT _os_sem_wait (U32 p, OS_ID semaphore, U16 timeout)    __SVC_0;
+Xextern OS_RESULT _os_sem_wait (U32 p, OS_ID semaphore, U16 timeout)    __svc_indirect(0);
+Nextern void      isr_sem_send (OS_ID semaphore);
+N
+N/* Mailbox Management */
+Nextern void      rt_mbx_init  (OS_ID mailbox, U16 mbx_size);
+Nextern OS_RESULT rt_mbx_send  (OS_ID mailbox, void *p_msg,    U16 timeout);
+Nextern OS_RESULT rt_mbx_wait  (OS_ID mailbox, void **message, U16 timeout);
+Nextern OS_RESULT rt_mbx_check (OS_ID mailbox);
+N
+N#define os_mbx_init(mbx,mbx_size)     _os_mbx_init((U32)rt_mbx_init,mbx,mbx_size)
+N#define os_mbx_send(mbx,p_msg,tmo)    _os_mbx_send((U32)rt_mbx_send,mbx,p_msg,tmo)
+N#define os_mbx_wait(mbx,message,tmo)  _os_mbx_wait((U32)rt_mbx_wait,mbx,message,tmo)
+N#define os_mbx_check(mbx)             _os_mbx_check((U32)rt_mbx_check,mbx)
+N#define isr_mbx_check(mbx)            rt_mbx_check(mbx)
+N
+Nextern void      _os_mbx_init (U32 p, OS_ID mailbox, U16 mbx_size)     __SVC_0;
+Xextern void      _os_mbx_init (U32 p, OS_ID mailbox, U16 mbx_size)     __svc_indirect(0);
+Nextern OS_RESULT _os_mbx_send (U32 p, OS_ID mailbox, void *message_ptr,
+N                                      U16 timeout)                     __SVC_0;
+X                                      U16 timeout)                     __svc_indirect(0);
+Nextern OS_RESULT _os_mbx_wait (U32 p, OS_ID mailbox, void  **message,
+N                                      U16 timeout)                     __SVC_0;
+X                                      U16 timeout)                     __svc_indirect(0);
+Nextern OS_RESULT _os_mbx_check (U32 p, OS_ID mailbox)                  __SVC_0;
+Xextern OS_RESULT _os_mbx_check (U32 p, OS_ID mailbox)                  __svc_indirect(0);
+Nextern void      isr_mbx_send (OS_ID mailbox, void *message_ptr);
+Nextern OS_RESULT isr_mbx_receive (OS_ID mailbox, void **message);
+N
+N/* Mutex Management */
+Nextern void      rt_mut_init    (OS_ID mutex);
+Nextern OS_RESULT rt_mut_release (OS_ID mutex);
+Nextern OS_RESULT rt_mut_wait    (OS_ID mutex, U16 timeout);
+N
+N#define os_mut_init(mutex)         _os_mut_init((U32)rt_mut_init,mutex)
+N#define os_mut_release(mutex)      _os_mut_release((U32)rt_mut_release,mutex)
+N#define os_mut_wait(mutex,timeout) _os_mut_wait((U32)rt_mut_wait,mutex,timeout)
+N
+Nextern void      _os_mut_init (U32 p, OS_ID mutex)                     __SVC_0;
+Xextern void      _os_mut_init (U32 p, OS_ID mutex)                     __svc_indirect(0);
+Nextern OS_RESULT _os_mut_release (U32 p, OS_ID mutex)                  __SVC_0;
+Xextern OS_RESULT _os_mut_release (U32 p, OS_ID mutex)                  __svc_indirect(0);
+Nextern OS_RESULT _os_mut_wait (U32 p, OS_ID mutex, U16 timeout)        __SVC_0;
+Xextern OS_RESULT _os_mut_wait (U32 p, OS_ID mutex, U16 timeout)        __svc_indirect(0);
+N
+N/* Time Management */
+Nextern U32       rt_time_get (void);
+Nextern void      rt_dly_wait (U16 delay_time);
+Nextern void      rt_itv_set  (U16 interval_time);
+Nextern void      rt_itv_wait (void);
+N
+N#define os_time_get()              _os_time_get((U32)rt_time_get)
+N#define os_dly_wait(delay_time)    _os_dly_wait((U32)rt_dly_wait,delay_time)
+N#define os_itv_set(interval_time)  _os_itv_set((U32)rt_itv_set,interval_time)
+N#define os_itv_wait()              _os_itv_wait((U32)rt_itv_wait)
+N
+Nextern U32       _os_time_get (U32 p)                                  __SVC_0;
+Xextern U32       _os_time_get (U32 p)                                  __svc_indirect(0);
+Nextern void      _os_dly_wait (U32 p, U16 delay_time)                  __SVC_0;
+Xextern void      _os_dly_wait (U32 p, U16 delay_time)                  __svc_indirect(0);
+Nextern void      _os_itv_set (U32 p, U16 interval_time)                __SVC_0;
+Xextern void      _os_itv_set (U32 p, U16 interval_time)                __svc_indirect(0);
+Nextern void      _os_itv_wait (U32 p)                                  __SVC_0;
+Xextern void      _os_itv_wait (U32 p)                                  __svc_indirect(0);
+N
+N/* User Timer Management */
+Nextern OS_ID     rt_tmr_create (U16 tcnt, U16 info);
+Nextern OS_ID     rt_tmr_kill   (OS_ID timer);
+N
+N#define os_tmr_create(tcnt,info)   _os_tmr_create((U32)rt_tmr_create,tcnt,info)
+N#define os_tmr_kill(timer)         _os_tmr_kill((U32)rt_tmr_kill,timer)
+N
+Nextern OS_ID     _os_tmr_create (U32 p, U16 tcnt, U16 info)            __SVC_0;
+Xextern OS_ID     _os_tmr_create (U32 p, U16 tcnt, U16 info)            __svc_indirect(0);
+Nextern OS_ID     _os_tmr_kill (U32 p, OS_ID timer)                     __SVC_0;
+Xextern OS_ID     _os_tmr_kill (U32 p, OS_ID timer)                     __svc_indirect(0);
+N
+N/* Memory Management */
+Nextern U32   rt_init_mem  (void *pool, U32  size);
+Nextern void *rt_alloc_mem (void *pool, U32  size);
+Nextern U32   rt_free_mem  (void *pool, void *mem);
+N
+N#define os_init_mem(pool,size)    _os_init_mem((U32)rt_init_mem, pool,size)
+N#define os_alloc_mem(pool, size)  _os_alloc_mem((U32)rt_alloc_mem, pool,size)
+N#define os_free_mem(pool, mem)    _os_free_mem((U32)rt_free_mem, pool, mem)
+N
+Nextern U32      _os_init_mem(U32 p, void * pool, U32 size)    __SVC_0;
+Xextern U32      _os_init_mem(U32 p, void * pool, U32 size)    __svc_indirect(0);
+Nextern void *   _os_alloc_mem(U32 p, void * pool, U32 size)   __SVC_0;
+Xextern void *   _os_alloc_mem(U32 p, void * pool, U32 size)   __svc_indirect(0);
+Nextern U32      _os_free_mem(U32 p, void * pool, void *mem)   __SVC_0;
+Xextern U32      _os_free_mem(U32 p, void * pool, void *mem)   __svc_indirect(0);
+N
+N
+N/* System Functions */
+Nextern U32       rt_suspend    (void);
+Nextern void      rt_resume     (U32 sleep_time);
+Nextern void      rt_tsk_lock   (void);
+Nextern void      rt_tsk_unlock (void);
+N
+N#define os_suspend()               _os_suspend((U32)rt_suspend)
+N#define os_resume(sleep_time)      _os_resume((U32)rt_resume,sleep_time)
+N#define tsk_lock()                 _os_tsk_lock((U32)rt_tsk_lock)
+N#define tsk_unlock()               _os_tsk_unlock((U32)rt_tsk_unlock)
+N
+Nextern U32       _os_suspend (U32 p)                                   __SVC_0;
+Xextern U32       _os_suspend (U32 p)                                   __svc_indirect(0);
+Nextern void      _os_resume (U32 p, U32 sleep_time)                    __SVC_0;
+Xextern void      _os_resume (U32 p, U32 sleep_time)                    __svc_indirect(0);
+Nextern void      _os_tsk_lock (U32 p)                                  __SVC_0;
+Xextern void      _os_tsk_lock (U32 p)                                  __svc_indirect(0);
+Nextern void      _os_tsk_unlock (U32 p)                                __SVC_0;
+Xextern void      _os_tsk_unlock (U32 p)                                __svc_indirect(0);
+N
+N/* Fixed Memory Block Management Functions */
+Nextern int       _init_box (void *box_mem, U32 box_size, U32 blk_size);
+Nextern void     *_alloc_box (void *box_mem);
+Nextern void     *_calloc_box (void *box_mem);
+Nextern int       _free_box (void *box_mem, void *box);
+N
+N#endif
+N
+N#define BOX_ALIGN_8     0x80000000
+N#define _declare_box(pool,size,cnt)   U32 pool[(((size)+3)/4)*(cnt) + 3]
+N#define _declare_box8(pool,size,cnt)  U64 pool[(((size)+7)/8)*(cnt) + 2]
+N#define _init_box8(pool,size,bsize)   _init_box (pool,size,bsize | BOX_ALIGN_8)
+N
+N/* For compatibility with older configurations.*/
+N#define os_stk_overflow         os_error
+N
+N/*----------------------------------------------------------------------------
+N *                        Flash File System API
+N *---------------------------------------------------------------------------*/
+N
+N/* File System Type */
+Ntypedef enum _FS_TYPE {
+N  FS_TYPE_NONE = 0,                     /* No file system (volume unformatted)*/
+N  FS_TYPE_UNKNOWN,                      /* File system type is unknown       */
+N  FS_TYPE_FAT12,                        /* File system type is FAT12         */
+N  FS_TYPE_FAT16,                        /* File system type is FAT16         */
+N  FS_TYPE_FAT32,                        /* File system type is FAT32         */
+N  FS_TYPE_EFS                           /* File system type is EFS           */
+N} FS_TYPE;
+N
+Ntypedef struct {                        /* RL Time format (FFS, TCPnet)      */
+N  U8  hr;                               /* Hours    [0..23]                  */
+N  U8  min;                              /* Minutes  [0..59]                  */
+N  U8  sec;                              /* Seconds  [0..59]                  */
+N  U8  day;                              /* Day      [1..31]                  */
+N  U8  mon;                              /* Month    [1..12]                  */
+N  U16 year;                             /* Year     [1980..2107]             */
+N} RL_TIME;
+N
+Ntypedef struct {                        /* Search info record                */
+N  S8  name[256];                        /* Name                              */
+N  U32 size;                             /* File size in bytes                */
+N  U16 fileID;                           /* System Identification             */
+N  U8  attrib;                           /* Attributes                        */
+N  RL_TIME time;                         /* Create/Modify Time                */
+N} FINFO;
+N
+N/* Drive information */
+Ntypedef struct {
+N  FS_TYPE fs_type;                      /* Drives file system type           */
+N  U64     capacity;                     /* Drives capacity in bytes          */
+N} Drive_INFO;
+N
+Nextern int finit (const char *drive);
+Nextern int funinit (const char *drive);
+Nextern int fdelete (const char *filename);
+Nextern int frename (const char *oldname, const char *newname);
+Nextern int ffind (const char *pattern, FINFO *info);
+Nextern U64 ffree (const char *drive);
+Nextern int fformat (const char *drive);
+Nextern int fanalyse (const char *drive);
+Nextern int fcheck (const char *drive);
+Nextern int fdefrag (const char *drive);
+Nextern int fattrib (const char *par, const char *path);
+Nextern int fvol    (const char *drive, char *buf);
+Nextern int finfo   (const char *drive, Drive_INFO *info);
+N
+N/* The following macros provide for common functions */
+N#define unlink(fn)      fdelete(fn);
+N
+N/*----------------------------------------------------------------------------
+N *                             TCPnet API
+N *---------------------------------------------------------------------------*/
+N
+N/* UDP Options */
+N#define UDP_OPT_SEND_CS    0x01   /* Calculate Checksum for UDP send frames  */
+N#define UDP_OPT_CHK_CS     0x02   /* Verify Checksum for received UDP frames */
+N
+N/* TCP Socket Types */
+N#define TCP_TYPE_SERVER    0x01   /* Socket Type Server (open for listening) */
+N#define TCP_TYPE_CLIENT    0x02   /* Socket Type Client (initiate connect)   */
+N#define TCP_TYPE_DELAY_ACK 0x04   /* Socket Type Delayed Acknowledge         */
+N#define TCP_TYPE_FLOW_CTRL 0x08   /* Socket Type Flow Control                */
+N#define TCP_TYPE_KEEP_ALIVE 0x10  /* Socket Type Keep Alive                  */
+N#define TCP_TYPE_CLIENT_SERVER (TCP_TYPE_SERVER | TCP_TYPE_CLIENT)
+N
+N/* TCP Callback Events */
+N#define TCP_EVT_CONREQ     0      /* Connect request received event          */
+N#define TCP_EVT_CONNECT    1      /* Connection established event            */
+N#define TCP_EVT_CLOSE      2      /* Connection was properly closed          */
+N#define TCP_EVT_ABORT      3      /* Connection is for some reason aborted   */
+N#define TCP_EVT_ACK        4      /* Previously send data acknowledged       */
+N#define TCP_EVT_DATA       5      /* Data received event                     */
+N
+N/* TCP States */
+N#define TCP_STATE_FREE     0      /* Entry is free and unused                */
+N#define TCP_STATE_CLOSED   1      /* Entry allocated, socket still closed    */
+N#define TCP_STATE_LISTEN   2      /* Socket waiting for incoming connection  */
+N#define TCP_STATE_SYN_REC  3      /* SYN frame received                      */
+N#define TCP_STATE_SYN_SENT 4      /* SYN packet sent to establish a connect. */
+N#define TCP_STATE_FINW1    5      /* Tcp_close started FIN packet was sent   */
+N#define TCP_STATE_FINW2    6      /* Our FIN ack-ed, waiting for remote FIN  */
+N#define TCP_STATE_CLOSING  7      /* Received FIN independently of our FIN   */
+N#define TCP_STATE_LAST_ACK 8      /* Waiting for last ACK for our FIN        */
+N#define TCP_STATE_TWAIT    9      /* Timed waiting for 2MSL                  */
+N#define TCP_STATE_CONNECT  10     /* TCP Connection established              */
+N
+N/* BSD Socket Address Family */
+N#define AF_UNSPEC          0      /* Unspecified                             */
+N#define AF_INET            1      /* Internet Address Family (UDP, TCP)      */
+N#define AF_NETBIOS         2      /* NetBios-style addresses                 */
+N
+N/* BSD Protocol families, same as address families */
+N#define PF_UNSPEC          AF_UNSPEC
+N#define PF_INET            AF_INET
+N#define PF_NETBIOS         AF_NETBIOS
+N
+N/* BSD Socket Type */
+N#define SOCK_STREAM        1      /* Stream Socket (Connection oriented)     */
+N#define SOCK_DGRAM         2      /* Datagram Socket (Connectionless)        */
+N
+N/* BSD Socket Protocol */
+N#define IPPROTO_TCP        1      /* TCP Protocol                            */
+N#define IPPROTO_UDP        2      /* UDP Protocol                            */
+N
+N/* BSD Internet Addresses */
+N#define INADDR_ANY     0x00000000 /* All IP addresses accepted               */
+N#define INADDR_NONE    0xffffffff /* No IP address accepted                  */
+N
+N/* BSD Socket Return values */
+N#define SCK_SUCCESS         0     /* Success                                 */
+N#define SCK_ERROR         (-1)    /* General Error                           */
+N#define SCK_EINVALID      (-2)    /* Invalid socket descriptor               */
+N#define SCK_EINVALIDPARA  (-3)    /* Invalid parameter                       */
+N#define SCK_EWOULDBLOCK   (-4)    /* It would have blocked.                  */
+N#define SCK_EMEMNOTAVAIL  (-5)    /* Not enough memory in memory pool        */
+N#define SCK_ECLOSED       (-6)    /* Connection is closed or aborted         */
+N#define SCK_ELOCKED       (-7)    /* Socket is locked in RTX environment     */
+N#define SCK_ETIMEOUT      (-8)    /* Socket, Host Resolver timeout           */
+N#define SCK_EINPROGRESS   (-9)    /* Host Name resolving in progress         */
+N#define SCK_ENONAME       (-10)   /* Host Name not existing                  */
+N
+N/* BSD Socket flags parameter */
+N#define MSG_DONTWAIT       0x01   /* Enables non-blocking operation          */
+N#define MSG_PEEK           0x02   /* Peeks at the incoming data              */
+N
+N/* BSD Socket ioctl commands */
+N#define FIONBIO            1      /* Set mode (blocking/non-blocking)        */
+N#define FIO_DELAY_ACK      2      /* Set DELAY_ACK mode for stream socket    */
+N#define FIO_KEEP_ALIVE     3      /* Set KEEP_ALIVE mode for stream socket   */
+N#define FIO_FLOW_CTRL      4      /* Set FLOW_CTRL mode for stream socket    */
+N
+N/* ICMP (ping) Callback Events */
+N#define ICMP_EVT_SUCCESS   0      /* Pinged Host responded                   */
+N#define ICMP_EVT_TIMEOUT   1      /* Timeout, no ping response received      */
+N
+N/* DNS Client Callback Events */
+N#define DNS_EVT_SUCCESS    0      /* Host name successfully resolved         */
+N#define DNS_EVT_NONAME     1      /* DNS Error, no such name                 */
+N#define DNS_EVT_TIMEOUT    2      /* Timeout resolving host                  */
+N#define DNS_EVT_ERROR      3      /* Erroneous response packet               */
+N
+N/* DNS 'get_host_by_name()' result codes */
+N#define DNS_RES_OK         0      /* Resolver successfully started           */
+N#define DNS_ERROR_BUSY     1      /* Resolver busy, can't process request    */
+N#define DNS_ERROR_LABEL    2      /* Label in Hostname not valid             */
+N#define DNS_ERROR_NAME     3      /* Entire Hostname not valid               */
+N#define DNS_ERROR_NOSRV    4      /* Prim. DNS server not specified (0.0.0.0)*/
+N#define DNS_ERROR_PARAM    5      /* Invalid parameter                       */
+N
+N/* SMTP Client Callback Events */
+N#define SMTP_EVT_SUCCESS   0      /* Email successfully sent                 */
+N#define SMTP_EVT_TIMEOUT   1      /* Timeout sending email                   */
+N#define SMTP_EVT_ERROR     2      /* Error when sending email                */
+N
+N/* FTP Client Commands */
+N#define FTPC_CMD_PUT       0      /* Puts a file on FTP server               */
+N#define FTPC_CMD_GET       1      /* Retrieves a file from FTP server        */
+N#define FTPC_CMD_APPEND    2      /* Append file on FTP server (with create) */
+N#define FTPC_CMD_DELETE    3      /* Deletes a file on FTP server            */
+N#define FTPC_CMD_LIST      4      /* Lists files stored on FTP server        */
+N#define FTPC_CMD_RENAME    5      /* Renames a file on FTP server            */
+N#define FTPC_CMD_MKDIR     6      /* Makes a directory on FTP server         */
+N#define FTPC_CMD_RMDIR     7      /* Removes an empty directory on FTP server*/
+N#define FTPC_CMD_NLIST     8      /* Lists file names only (short format)    */
+N
+N/* FTP Client Callback Events */
+N#define FTPC_EVT_SUCCESS   0      /* File operation successful               */
+N#define FTPC_EVT_TIMEOUT   1      /* Timeout on file operation               */
+N#define FTPC_EVT_LOGINFAIL 2      /* Login error, username/passw invalid     */
+N#define FTPC_EVT_NOACCESS  3      /* File access not allowed                 */
+N#define FTPC_EVT_NOTFOUND  4      /* File not found                          */
+N#define FTPC_EVT_NOPATH    5      /* Working directory path not found        */
+N#define FTPC_EVT_ERRLOCAL  6      /* Local file open error                   */
+N#define FTPC_EVT_ERROR     7      /* Generic FTP client error                */
+N
+N/* TFTP Client Callback Events */
+N#define TFTPC_EVT_SUCCESS  0      /* File operation successful               */
+N#define TFTPC_EVT_TIMEOUT  1      /* Timeout on file operation               */
+N#define TFTPC_EVT_NOACCESS 2      /* File access not allowed                 */
+N#define TFTPC_EVT_NOTFOUND 3      /* File not found                          */
+N#define TFTPC_EVT_DISKFULL 4      /* Disk full (local or remote)             */
+N#define TFTPC_EVT_ERROR    5      /* Generic TFTP client error               */
+N
+N/* FTP Server Notification events */
+N#define FTP_EVT_LOGIN      0      /* User logged in, session is busy         */
+N#define FTP_EVT_LOGOUT     1      /* User logged out, session is idle        */
+N#define FTP_EVT_LOGFAIL    2      /* User login failed (invalid credentials) */
+N#define FTP_EVT_DOWNLOAD   3      /* File download ended                     */
+N#define FTP_EVT_UPLOAD     4      /* File upload ended                       */
+N#define FTP_EVT_DELETE     5      /* File deleted                            */
+N#define FTP_EVT_RENAME     6      /* File or directory renamed               */
+N#define FTP_EVT_MKDIR      7      /* Directory created                       */
+N#define FTP_EVT_RMDIR      8      /* Directory removed                       */
+N#define FTP_EVT_ERRLOCAL   9      /* Local file operation error              */
+N#define FTP_EVT_DENIED     10     /* Requested file operation denied         */
+N#define FTP_EVT_ERROR      11     /* Generic file operation error            */
+N
+N/* ARP Cache Entry types */
+N#define ARP_FIXED_IP       0      /* Fixed IP adrs is refreshed after tout   */
+N#define ARP_TEMP_IP        1      /* Temp adrs is removed after timeout      */
+N
+N/* BSD Socket typedef's */
+Ntypedef struct sockaddr {         /* << Generic Socket Address structure >>  */
+N  U16  sa_family;                 /* Address family                          */
+N  char sa_data[14];               /* Direct address (up to 14 bytes)         */
+N} SOCKADDR;
+N
+N#pragma push
+N#pragma anon_unions
+N
+Ntypedef struct in_addr {          /* << Generic IPv4 Address structure >>    */
+N  union {
+N    struct {
+N      U8 s_b1,s_b2,s_b3,s_b4;     /* IP address, byte access                 */
+N    };
+N    struct {
+N      U16 s_w1,s_w2;              /* IP address, short int access            */
+N    };
+N    U32 s_addr;                   /* IP address in network byte order        */
+N  };
+N} IN_ADDR;
+N#pragma pop
+N
+Ntypedef struct sockaddr_in {      /* << IPv4 Socket Address structure >>     */
+N  S16 sin_family;                 /* Socket domain                           */
+N  U16 sin_port;                   /* Port                                    */
+N  IN_ADDR sin_addr;               /* IP address                              */
+N  S8  sin_zero[8];                /* reserved                                */
+N} SOCKADDR_IN;
+N
+Ntypedef struct hostent {          /* << BSD Host Entry structure >>          */
+N  char *h_name;                   /* Official name of host                   */
+N  char **h_aliases;               /* Pointer to an array of alias names      */
+N  S16  h_addrtype;                /* Address Type: AF_INET, AF_NETBIOS       */
+N  S16  h_length;                  /* Length of address in bytes              */
+N  char **h_addr_list;             /* Pointer to an array of IPv4 addresses   */
+N} HOSTENT;
+N
+Nextern void init_TcpNet (void);
+Nextern BOOL main_TcpNet (void);
+Nextern void timer_tick (void);
+Nextern U8   udp_get_socket (U8 tos, U8 opt, 
+N                            U16 (*listener)(U8 socket, U8 *remip, U16 port, U8 *buf, U16 len));
+Nextern BOOL udp_release_socket (U8 socket);
+Nextern BOOL udp_open (U8 socket, U16 locport);
+Nextern BOOL udp_close (U8 socket);
+Nextern BOOL udp_mcast_ttl (U8 socket, U8 ttl);
+Nextern U8  *udp_get_buf (U16 size);
+Nextern BOOL udp_send (U8 socket, U8 *remip, U16 remport, U8 *buf, U16 dlen);
+Nextern U8   tcp_get_socket (U8 type, U8 tos, U16 tout,
+N                            U16 (*listener)(U8 socket, U8 event, U8 *buf, U16 len));
+Nextern BOOL tcp_release_socket (U8 socket);
+Nextern BOOL tcp_listen (U8 socket, U16 locport);
+Nextern BOOL tcp_connect (U8 socket, U8 *remip, U16 remport, U16 locport);
+Nextern U8  *tcp_get_buf (U16 size);
+Nextern U16  tcp_max_dsize (U8 socket);
+Nextern BOOL tcp_check_send (U8 socket);
+Nextern U8   tcp_get_state (U8 socket);
+Nextern BOOL tcp_send (U8 socket, U8 *buf, U16 dlen);
+Nextern BOOL tcp_close (U8 socket);
+Nextern BOOL tcp_abort (U8 socket);
+Nextern void tcp_reset_window (U8 socket);
+Nextern BOOL arp_cache_ip (U8 *ipadr, U8 type);
+Nextern BOOL arp_cache_mac (U8 *hwadr);
+Nextern void ppp_listen (const char *user, const char *passw);
+Nextern void ppp_connect (const char *dialnum, const char *user, const char *passw);
+Nextern void ppp_close (void);
+Nextern BOOL ppp_is_up (void);
+Nextern void slip_listen (void);
+Nextern void slip_connect (const char *dialnum);
+Nextern void slip_close (void);
+Nextern BOOL slip_is_up (void);
+Nextern U8   get_host_by_name (U8 *hostn, void (*cbfunc)(U8 event, U8 *host_ip));
+Nextern BOOL smtp_connect (U8 *ipadr, U16 port, void (*cbfunc)(U8 event));
+Nextern void dhcp_disable (void);
+Nextern BOOL igmp_join (U8 *group_ip);
+Nextern BOOL igmp_leave (U8 *group_ip);
+Nextern BOOL snmp_trap (U8 *manager_ip, U8 gen_trap, U8 spec_trap, U16 *obj_list);
+Nextern BOOL snmp_set_community (const char *community);
+Nextern BOOL icmp_ping (U8 *remip, void (*cbfunc)(U8 event));
+Nextern BOOL ftpc_connect (U8 *ipadr, U16 port, U8 command, void (*cbfunc)(U8 event));
+Nextern BOOL tftpc_put (U8 *ipadr, U16 port,
+N                       const char *src, const char *dst, void (*cbfunc)(U8 event));
+Nextern BOOL tftpc_get (U8 *ipadr, U16 port, 
+N                       const char *src, const char *dst, void (*cbfunc)(U8 event));
+Nextern BOOL sntp_get_time (U8 *ipadr, void (*cbfunc)(U32 utc_time));
+Nextern void ftp_evt_notify (U8 evt);
+N
+N/* BSD Socket API */
+Nextern int  socket (int family, int type, int protocol);
+Nextern int  bind (int sock, const SOCKADDR *addr, int addrlen);
+Nextern int  listen (int sock, int backlog);
+Nextern int  accept (int sock, SOCKADDR *addr, int *addrlen);
+Nextern int  connect (int sock, SOCKADDR *addr, int addrlen);
+Nextern int  send (int sock, const char *buf, int len, int flags);
+Nextern int  sendto (int sock, const char *buf, int len, int flags, SOCKADDR *to, int tolen);
+Nextern int  recv (int sock, char *buf, int len, int flags);
+Nextern int  recvfrom (int sock, char *buf, int len, int flags, SOCKADDR *from, int *fromlen);
+Nextern int  closesocket (int sock);
+Nextern int  getpeername (int sock, SOCKADDR *name, int *namelen);
+Nextern int  getsockname (int sock, SOCKADDR *name, int *namelen);
+Nextern int  ioctlsocket (int sock, long cmd, unsigned long *argp);
+Nextern HOSTENT *gethostbyname (const char *name, int *err);
+N
+N#ifdef __cplusplus
+S}
+N#endif
+N
+N/*----------------------------------------------------------------------------
+N * end of file
+N *---------------------------------------------------------------------------*/
+N
+N#endif
+N 
+L 16 "..\..\RL-ARM\Config\Net_Config.h" 2
+N
+N/* Definitions */
+N#define ETH_ADRLEN      6         /* Ethernet Address Length in bytes        */
+N#define IP_ADRLEN       4         /* IP Address Length in bytes              */
+N#define OS_HEADER_LEN   4         /* TCPnet 'os_frame' header size           */
+N                                  /* Frame Header length common for all      */
+N#define PHY_HEADER_LEN  (2*ETH_ADRLEN + 2) /* network interfaces.            */
+N#define ETH_MTU         1514      /* Ethernet Frame Max Transfer Unit        */
+N#define PPP_PROT_IP     0x0021    /* PPP Protocol type: IP                   */
+N#define TCP_DEF_WINSIZE 4380      /* TCP default window size                 */
+N#define PASSW_SZ        20        /* Authentication Password Buffer size     */
+N
+N/* Network Interfaces */
+N#define NETIF_ETH       0         /* Network interface: Ethernet             */
+N#define NETIF_PPP       1         /* Network interface: PPP                  */
+N#define NETIF_SLIP      2         /* Network interface: Slip                 */
+N#define NETIF_LOCAL     3         /* Network interface: Localhost (loopback) */
+N#define NETIF_NULL      4         /* Network interface: Null (none)          */
+N
+N/* Telnet Definitions */
+N#define TNET_LBUFSZ     96        /* Command Line buffer size (bytes)        */
+N#define TNET_HISTSZ     128       /* Command History buffer size (bytes)     */
+N#define TNET_FIFOSZ     128       /* Input character Fifo buffer (bytes)     */
+N
+N/* SNMP-MIB Definitions */
+N#define MIB_INTEGER     0x02      /* MIB entry type INTEGER                  */
+N#define MIB_OCTET_STR   0x04      /* MIB entry type OCTET_STRING             */
+N#define MIB_OBJECT_ID   0x06      /* MIB entry type OBJECT_IDENTIFIER        */
+N#define MIB_IP_ADDR     0x40      /* MIB entry type IP ADDRESS (U8[4])       */
+N#define MIB_COUNTER     0x41      /* MIB entry type COUNTER (U32)            */
+N#define MIB_GAUGE       0x42      /* MIB entry type GAUGE (U32)              */
+N#define MIB_TIME_TICKS  0x43      /* MIB entry type TIME_TICKS               */
+N#define MIB_ATR_RO      0x80      /* MIB entry attribute READ_ONLY           */
+N#define MIB_OIDSZ       17        /* Max.size of Object ID value             */
+N#define MIB_STRSZ       110       /* Max.size of Octet String variable       */
+N#define MIB_READ        0         /* MIB entry Read access                   */
+N#define MIB_WRITE       1         /* MIB entry Write access                  */
+N
+N/* SNMP-MIB Macros */
+N#define MIB_STR(s)      sizeof(s)-1, s
+N#define MIB_INT(o)      sizeof(o), (void *)&o
+N#define MIB_IP(ip)      4, (void *)&ip 
+N#define OID0(f,s)       (f*40 + s) 
+N
+N/* Debug Module Definitions */
+N#define MODULE_MEM      0         /* Dynamic Memory Module ID                */
+N#define MODULE_ETH      1         /* Ethernet Module ID                      */
+N#define MODULE_PPP      2         /* PPP Module ID                           */
+N#define MODULE_SLIP     3         /* SLIP Module ID                          */
+N#define MODULE_ARP      4         /* ARP Module ID                           */
+N#define MODULE_IP       5         /* IP Module ID                            */
+N#define MODULE_ICMP     6         /* ICMP Module ID                          */
+N#define MODULE_IGMP     7         /* IGMP Module ID                          */
+N#define MODULE_UDP      8         /* UDP Module ID                           */
+N#define MODULE_TCP      9         /* TCP Module ID                           */
+N#define MODULE_NBNS     10        /* NBNS Module ID                          */
+N#define MODULE_DHCP     11        /* DHCP Module ID                          */
+N#define MODULE_DNS      12        /* DNS Module ID                           */
+N#define MODULE_SNMP     13        /* SNMP Module ID                          */
+N#define MODULE_BSD      14        /* BSD Socket Module ID                    */
+N#define MODULE_HTTP     15        /* HTTP Server Module ID                   */
+N#define MODULE_FTP      16        /* FTP Server Module ID                    */
+N#define MODULE_FTPC     17        /* FTP Client Module ID                    */
+N#define MODULE_TNET     18        /* Telnet Server Module ID                 */
+N#define MODULE_TFTP     19        /* TFTP Server Module ID                   */
+N#define MODULE_TFTPC    20        /* TFTP Client Module ID                   */
+N#define MODULE_SMTP     21        /* SMTP Client Module ID                   */
+N#define MODULE_SNTP     22        /* SNTP Client Module ID                   */
+N
+N/*---------------------------------------------------------------------------*/
+N
+N#ifdef __cplusplus
+Sextern "C"  {
+N#endif
+N
+Ntypedef struct os_frame {         /* << System frame buffer structure >>     */
+N  U16 length;                     /* Total Length of data in frame           */
+N  U16 index;                      /* Buffer Position Index                   */
+N  U8  data[1];                    /* Buffer data (protocol headers + data)   */
+N} OS_FRAME;
+N
+Ntypedef struct arp_info {         /* << ARP Cache Entry info >>              */
+N  U8  State;                      /* ARP Cache entry current state           */
+N  U8  Type;                       /* Cache Entry type                        */
+N  U8  Retries;                    /* Number of Retries left                  */
+N  U8  Tout;                       /* Cache Entry Timeout                     */
+N  U8  HwAdr[ETH_ADRLEN];          /* Ethernet Hardware Address               */
+X  U8  HwAdr[6];           
+N  U8  IpAdr[IP_ADRLEN];           /* Ethernet IP Address                     */
+X  U8  IpAdr[4];            
+N} ARP_INFO;
+N
+Ntypedef struct igmp_info {        /* << IGMP Group info >>                   */
+N  U8  State;                      /* Group membership current state          */
+N  U8  Tout;                       /* Timeout Timer for sending reports       */
+N  U8  Flags;                      /* State machine flags                     */
+N  U8  GrpIpAdr[IP_ADRLEN];        /* Group IP address                        */
+X  U8  GrpIpAdr[4];         
+N} IGMP_INFO;
+N
+Ntypedef struct udp_info {         /* << UDP Socket info >>                   */
+N  U8  State;                      /* UDP Socket entry current state          */
+N  U8  Opt;                        /* UDP Socket Options                      */
+N  U8  Flags;                      /* State machine flags                     */
+N  U8  Tos;                        /* UDP Type of Service                     */
+N  U16 LocPort;                    /* Local UDP port of Socket                */
+N  U8  McastTtl;                   /* MultiCast Time To Live                  */
+N                                  /* Application Event CallBack function     */
+N  U16 (*cb_func)(U8 socket, U8 *rem_ip, U16 port, U8 *buf, U16 len);
+N} UDP_INFO;
+N
+Ntypedef struct tcp_info {         /* << TCP Socket info >>                   */
+N  U8  State;                      /* Socket entry current state              */
+N  U8  Type;                       /* Socket type                             */
+N  U8  Flags;                      /* State machine flags                     */
+N  U8  Tos;                        /* Type of service allocated               */
+N  U8  RemIpAdr[IP_ADRLEN];        /* Remote IP address                       */
+X  U8  RemIpAdr[4];         
+N  U16 RemPort;                    /* Remote TCP port                         */
+N  U16 LocPort;                    /* Local TCP port                          */
+N  U16 MaxSegSize;                 /* Transmit Max. Segment Size              */
+N  U16 Tout;                       /* Socket idle timeout (in seconds)        */
+N  U16 AliveTimer;                 /* Keep Alive timer                        */
+N  U16 RetryTimer;                 /* Retransmission timer                    */
+N  U8  AckTimer;                   /* Receive Delay-ack timer                 */
+N  U8  Id;                         /* Socket identification number            */
+N  U8  Retries;                    /* Number of retries left before aborting  */
+N  U8  DupAcks;                    /* Number of duplicate acks (fast recovery)*/
+N  U32 SendUna;                    /* Send Sequence Number unacknowledged     */
+N  U32 SendNext;                   /* Next Send Sequence Number               */
+N  U32 SendChk;                    /* Check Sequence Number for dupacks       */
+N  U32 SendWl1;                    /* Sequence Number of last Window update   */
+N  U32 SendWl2;                    /* Acknowledge Number of last Window update*/
+N  U16 SendWin;                    /* Current Send Window                     */
+N  S16 RttSa;                      /* Scaled Average for RTT estimator        */
+N  S16 RttSv;                      /* Scaled deViation for RTT estimator      */
+N  U16 CWnd;                       /* Congestion Window                       */
+N  U16 SsThresh;                   /* Slow Start Treshold                     */
+N  U16 RecWin;                     /* Current Receive Window                  */
+N  U32 RecNext;                    /* Next Receive Sequence Number            */
+N  OS_FRAME *unack_list;           /* Unacked queue list                      */
+N                                  /* Application Event-CallBack function     */
+N  U16 (*cb_func)(U8 socket, U8 event, U8 *p1, U16 p2);
+N} TCP_INFO;
+N
+Ntypedef struct bsd_info {         /* << BSD Socket info >>                   */
+N  U8  State;                      /* BSD Socket current state                */
+N  U8  Socket;                     /* Binded TCP/UDP Socket                   */
+N  U8  Flags;                      /* Flags for Socket Option                 */
+N  U8  Type;                       /* Type of Socket (SOCK_DGRAM/SOCK_STREAM) */
+N  U16 LocPort;                    /* Bind local Port                         */
+N  U16 RemPort;                    /* Remote TCP/UDP Port                     */
+N  U32 LocIP;                      /* Bind local IP address (net byte order)  */
+N  U32 RemIP;                      /* Remote IP address     (net byte order)  */
+N  U8  AcceptSock;                 /* Accept Socket list                      */
+N  U8  ParentSock;                 /* Parent (server) socket                  */
+N  U8  Event;                      /* Wait Event flags in RTX environment     */
+N  U8  Task;                       /* Socket Owner Task                       */
+N  U16 Tout;                       /* Receive timer value                     */
+N  void *buf_list;                 /* Rx Data buffer chain                    */
+N} BSD_INFO;
+N
+Ntypedef struct http_info {        /* << HTTP Session info >>                 */
+N  U8  State;                      /* HTTP Session current state              */
+N  U8  Socket;                     /* binded TCP Socket                       */
+N  U16 Flags;                      /* State machine Flags                     */
+N  U8  FType;                      /* File Type: html, jpeg, gif,...          */
+N  U8  PostSt;                     /* POST method Processing Status           */
+N  U16 DelimSz;                    /* Boundary delimiter size                 */
+N  U8  UserId;                     /* User Id (authentication enabled)        */
+N  U32 CGIvar;                     /* CGI session private variable (cgi_func) */
+N  U32 DLen;                       /* Data length (number of bytes to send)   */
+N  U32 Count;                      /* Total number of bytes sent              */
+N  U16 BCnt;                       /* Number of bytes sent in last packet     */
+N  U8  Lang[6];                    /* Selected Web Language: en-us, de, fr .. */
+N  U32 LMDate;                     /* Last Modified Date (UTC format)         */
+N  U8 *Script;                     /* Script Buffer pointer                   */
+N  U8 *pDelim;                     /* Multipart Boundary delimiter value      */
+N  void *sFile;                    /* Script Interpreter File pointer         */
+N  void *dFile;                    /* Data File pointer                       */
+N} HTTP_INFO;
+N
+Ntypedef struct http_file {        /* << HTTP Internal File info >>           */
+N  U32       Id;                   /* File Name Id (CRC32 value of file name) */
+N  const U8 *Start;                /* File Start Address in ROM               */
+N} const HTTP_FILE;
+N
+Ntypedef struct tnet_info {        /* << Telnet Session info >>               */
+N  U8  State;                      /* Telnet Session current state            */
+N  U8  Socket;                     /* binded TCP Socket                       */
+N  U8  Flags;                      /* State machine Flags                     */
+N  U8  BCnt;                       /* Received Data byte count                */
+N  U16 Tout;                       /* Timeout delay counter                   */
+N  U8  UserId;                     /* User Id (authentication enabled)        */
+N  U8  Widx;                       /* Fifo buffer Write index                 */
+N  U8  Ridx;                       /* Fifo buffer Read index                  */
+N  U8  hNext;                      /* History command next position           */
+N  U8  hCurr;                      /* History command current position        */
+N  U32 SVar;                       /* Session private var. (tnet_process_cmd) */
+N  U8  LBuf[TNET_LBUFSZ];          /* Data Line Buffer                        */
+X  U8  LBuf[96];           
+N  U8  Fifo[TNET_FIFOSZ];          /* Fifo Buffer for received line/keycodes  */
+X  U8  Fifo[128];           
+N  U8  Hist[TNET_HISTSZ];          /* Command History buffer                  */
+X  U8  Hist[128];           
+N} TNET_INFO;
+N
+Ntypedef struct tftp_info {        /* << TFTP Session info >>                 */
+N  U8  State;                      /* TFTP Session current state              */
+N  U8  Socket;                     /* binded UDP Data Socket                  */
+N  U8  Flags;                      /* State machine Flags                     */
+N  U8  Retries;                    /* Retry counter                           */
+N  U8  RemIpAdr[IP_ADRLEN];        /* Remote IP address                       */
+X  U8  RemIpAdr[4];         
+N  U16 RemPort;                    /* Remote UDP port (TID)                   */
+N  U16 BlockSz;                    /* Transfer Block size                     */
+N  U16 BlockNr;                    /* Block Number                            */
+N  U8  Timer;                      /* Timeout Timer value                     */
+N  U16 BufLen;                     /* Length of retransmit buffer             */
+N  U8  *Buf;                       /* Transmit/Retransmit buffer              */
+N  void *File;                     /* File Handle pointer                     */
+N} TFTP_INFO;
+N
+Ntypedef struct ftp_info {         /* << FTP Session info >>                  */
+N  U8  State;                      /* FTP Session current state               */
+N  U8  Socket;                     /* binded TCP Control Socket               */
+N  U16 Flags;                      /* State machine Flags                     */
+N  U8  RemIpAdr[IP_ADRLEN];        /* Client IP address                       */
+X  U8  RemIpAdr[4];         
+N  U16 DPort;                      /* TCP Data port (Server or Client)        */
+N  U8  DSocket;                    /* TCP Data Socket                         */
+N  U8  UserId;                     /* User Id (authentication enabled)        */
+N  U8  Resp;                       /* FTP Server Response Code                */
+N  U8  PathLen;                    /* Size of the Path string                 */
+N  U8 *Path;                       /* Current Working Directory               */
+N  U8 *Name;                       /* Absolute File/Folder Path Name          */
+N  void *File;                     /* File Handle pointer                     */
+N} FTP_INFO;
+N
+Ntypedef struct dns_cache {        /* << DNS Cache Entry info >>              */
+N  U32 HostId;                     /* Host Id (CRC32 value of host name)      */
+N  U32 Ttl;                        /* Cache Entry Time To Live                */
+N  U8  IpAdr[IP_ADRLEN];           /* Ethernet IP Address                     */
+X  U8  IpAdr[4];            
+N} DNS_CACHE;
+N
+Ntypedef struct localm {           /* << Local Machine info >>                */
+N  U8  IpAdr[IP_ADRLEN];           /* Local IP Address                        */
+X  U8  IpAdr[4];            
+N  U8  DefGW[IP_ADRLEN];           /* Default GateWay                         */
+X  U8  DefGW[4];            
+N  U8  NetMask[IP_ADRLEN];         /* Net Mask                                */
+X  U8  NetMask[4];          
+N  U8  PriDNS[IP_ADRLEN];          /* Primary DNS Server                      */
+X  U8  PriDNS[4];           
+N  U8  SecDNS[IP_ADRLEN];          /* Secondary DNS Server                    */
+X  U8  SecDNS[4];           
+N} LOCALM;
+N
+Ntypedef struct remotem {          /* << Remote Machine Info >>               */
+N  U8  IpAdr[IP_ADRLEN];           /* Remote IP address                       */
+X  U8  IpAdr[4];            
+N  U8  HwAdr[ETH_ADRLEN];          /* Remote Hardware Address                 */
+X  U8  HwAdr[6];           
+N} REMOTEM;
+N
+Ntypedef struct mib_entry {        /* << SNMP-MIB Entry Info >>               */
+N  U8  Type;                       /* Object Type                             */
+N  U8  OidLen;                     /* Object ID length                        */
+N  U8  Oid[MIB_OIDSZ];             /* Object ID value                         */
+X  U8  Oid[17];              
+N  U8  ValSz;                      /* Size of a Variable                      */
+N  void *Val;                      /* Pointer to a variable                   */
+N  void (*cb_func)(int mode);      /* Write/Read event callback function      */
+N} MIB_ENTRY;
+N
+Ntypedef struct sys_cfg {          /* << SYS Configuration info >>            */
+N  U32 *MemPool;                   /* Dynamic Memory Pool buffer              */
+N  U32 MemSize;                    /* Memory Pool size in bytes               */
+N  U8  TickRate;                   /* Tick Rate in ticks per second           */
+N  U8  TickItv;                    /* Tick Interval in ms                     */
+N  U8  T200ms;                     /* Delay 200 ms in ticks                   */
+N  U8  NetCfg;                     /* Network Interface Configuration flags   */
+N  U8 *HostName;                   /* Local Host Name                         */
+N} const SYS_CFG;
+N
+Ntypedef struct arp_cfg {          /* << ARP Configuration info >>            */
+N  ARP_INFO *Table;                /* Cache Table array                       */
+N  U8  TabSize;                    /* Cache Table size                        */
+N  U8  TimeOut;                    /* Table Entry expiration time in seconds  */
+N  U8  MaxRetry;                   /* Number of Retries to resolve MAC addr.  */
+N  U8  Resend;                     /* Resend Timeout in seconds               */
+N  U8  Notify;                     /* Notify on IP address changes             */
+N} const ARP_CFG;
+N
+Ntypedef struct igmp_cfg {         /* << IGMP Configuration info >>           */
+N  IGMP_INFO *Table;               /* Group Table array                       */
+N  U16 TabSize;                    /* Group Table size                        */
+N} const IGMP_CFG;
+N
+Ntypedef struct dhcp_cfg {         /* << DHCP Configuration info >>           */
+N  U8 *Vcid;                       /* Vendor Class Identifier                 */
+N  U8  Opt;                        /* Extra DHCP option flags                 */
+N} const DHCP_CFG;
+N
+Ntypedef struct ppp_cfg {          /* << PPP Configuration info >>            */
+N  U32 ACCmap;                     /* Async Control Character map             */
+N  U16 SerTout;                    /* Serial Frame Receive Timeout            */
+N  U16 RetryTout;                  /* Retry Timeout in ticks                  */
+N  U16 EchoTout;                   /* LCP Echo Timeout in seconds             */
+N  U8  MaxRetry;                   /* Number of Retries                       */
+N  U8  EnAuth;                     /* Enabled Authentication protocols        */
+N} const PPP_CFG;
+N
+Ntypedef struct udp_cfg {          /* << UDP Configuration info >>            */
+N  UDP_INFO *Scb;                  /* Socket Control Block array              */
+N  U8  NumSocks;                   /* Number of UDP Sockets                   */
+N} const UDP_CFG;
+N
+Ntypedef struct tcp_cfg {          /* << TCP Configuration info >>            */
+N  TCP_INFO *Scb;                  /* Socket Control Block array              */
+N  U8  NumSocks;                   /* Number of TCP Sockets                   */
+N  U8  MaxRetry;                   /* Number of Retries                       */
+N  U16 RetryTout;                  /* Retry Timeout in ticks                  */
+N  U16 T2MSLTout;                  /* Maximum Segment Life Time               */
+N  U16 SynRetryTout;               /* SYN Retry Timeout in ticks              */
+N  U16 InitRetryTout;              /* Initial Retransmit timeout in ticks     */
+N  U16 DefTout;                    /* Default Connect Timeout in seconds      */
+N  U16 MaxSegSize;                 /* Maximum Segment Size value              */
+N  U16 RecWinSize;                 /* Receiving Window Size in bytes          */
+N  U8  ConRetry;                   /* Number of Retries to Connect            */
+N} const TCP_CFG;
+N
+Ntypedef struct http_cfg {         /* << HTTP Configuration info >>           */
+N  HTTP_INFO *Scb;                 /* Session Control Block array             */
+N  U8  NumSess;                    /* Max. Number of Active Sessions          */
+N  U8  EnAuth;                     /* Enable User Authentication              */
+N  U16 PortNum;                    /* Listening Port number                   */
+N  U8 const *SrvId;                /* Server-Id http header                   */
+N  U8 const *Realm;                /* Authentication Realm                    */
+N  U8 const *User;                 /* Authentication User name                */
+N  U8 *Passw;                      /* Authentication Password                 */
+N} const HTTP_CFG;
+N
+Ntypedef struct tnet_cfg {         /* << TNET Configuration info >>           */
+N  TNET_INFO *Scb;                 /* Session Control Block array             */
+N  U8  NumSess;                    /* Max. Number of Active Sessions          */
+N  U8  EnAuth;                     /* Enable User Authentication              */
+N  U8  NoEcho;                     /* Disable Server Echo mode                */
+N  U16 PortNum;                    /* Listening Port number                   */
+N  U16 IdleTout;                   /* Idle Connection timeout in ticks        */
+N  U8 const *User;                 /* Authentication User Name                */
+N  U8 *Passw;                      /* Authentication Password                 */
+N} const TNET_CFG;
+N
+Ntypedef struct tftp_cfg {         /* << TFTP Configuration info >>           */
+N  TFTP_INFO *Scb;                 /* Session Control Block array             */
+N  U8  NumSess;                    /* Max. Number of Active Sessions          */
+N  U8  MaxRetry;                   /* Number of Retries                       */
+N  U16 PortNum;                    /* Listening Port number                   */
+N  U8  DefTout;                    /* Inactive Session Timeout in seconds     */
+N  U8  EnFwall;                    /* Enable Firewall Support                 */
+N} const TFTP_CFG;
+N
+Ntypedef struct tftpc_cfg {        /* << TFTPC Configuration info >>          */
+N  U16 BlockSize;                  /* Transfer Block size                     */
+N  U16 RetryTout;                  /* Retry Timeout in ticks                  */
+N  U8  MaxRetry;                   /* Number of Retries                       */
+N} const TFTPC_CFG;
+N
+Ntypedef struct ftp_cfg {          /* << FTP Configuration info >>            */
+N  FTP_INFO *Scb;                  /* Session Control Block array             */
+N  U8  NumSess;                    /* Max. Number of Active Sessions          */
+N  U8  EnAuth;                     /* Enable User Authentication              */
+N  U16 PortNum;                    /* Listening Port number                   */
+N  U16 IdleTout;                   /* Idle Connection timeout in ticks        */
+N  U8  MsgLen;                     /* Length of welcome message               */
+N  U8 const *Msg;                  /* Server Welcome message                  */ 
+N  U8 const *User;                 /* Authentication User Name                */
+N  U8 *Passw;                      /* Authentication Password                 */
+N} const FTP_CFG;
+N
+Ntypedef struct ftpc_cfg {         /* << FTPC Configuration info >>           */
+N  U8  DefTout;                    /* Default inactivity timeout              */
+N  U8  PasvMode;                   /* FTP Passive Mode used                   */
+N} const FTPC_CFG;
+N
+Ntypedef struct dns_cfg {          /* << DNS Configuration info >>            */
+N  DNS_CACHE *Table;               /* Cache Table array                       */
+N  U8  TabSize;                    /* Cache Table size                        */
+N} const DNS_CFG;
+N
+Ntypedef struct snmp_cfg {         /* << SNMP Configuration info >>           */
+N  U16 PortNum;                    /* Listening Port number                   */
+N  U16 TrapPort;                   /* Trap Port number                        */
+N  U8  TrapIp[IP_ADRLEN];          /* Trap Server IP Address                  */
+X  U8  TrapIp[4];           
+N  U8 const *Community;            /* Community Name                          */
+N  U8  TickItv;                    /* Tick Interval in ticks                  */
+N} const SNMP_CFG;
+N
+Ntypedef struct sntp_cfg {         /* << SNTP Configuration info >>           */
+N  U8  SrvIp[IP_ADRLEN];           /* NTP/SNTP Server IP Address              */
+X  U8  SrvIp[4];            
+N  U8  Bcast;                      /* Broadcast client mode (for LAN only)    */
+N} const SNTP_CFG;
+N
+Ntypedef struct bsd_cfg {          /* << BSD Configuration info >>            */
+N  BSD_INFO *Scb;                  /* Socket Control Block array              */
+N  U8  NumSocks;                   /* Number of BSD Sockets                   */
+N  U8  InRtx;                      /* Running in RTX environment              */
+N  U16 RcvTout;                    /* Blocking recv timeout in ticks          */
+N} const BSD_CFG;
+N
+Ntypedef enum {                    /* << Fatal System Error Codes >>          */
+N  ERR_MEM_ALLOC,                  /* Alloc memory failed, out of memory      */
+N  ERR_MEM_FREE,                   /* Free memory failed, memory slot invalid */
+N  ERR_MEM_CORRUPT,                /* Memory corruption detected              */
+N  ERR_MEM_LOCK,                   /* Locked memory function re-entered error */
+N  ERR_UDP_ALLOC,                  /* No free UDP sockets available           */
+N  ERR_TCP_ALLOC,                  /* No free TCP sockets available           */
+N  ERR_TCP_STATE                   /* TCP socket in undefined state           */
+N} ERROR_CODE;
+N
+N
+N/*----------------------------------------------------------------------------
+N *      Functions
+N *---------------------------------------------------------------------------*/
+N
+N/* Net_Config.c */
+Nextern void init_system (void);
+Nextern void run_system (void);
+Nextern void sys_error (ERROR_CODE code);
+N
+N/* at_Mem.c */
+Nextern OS_FRAME *alloc_mem (U32 byte_size);
+Nextern void free_mem (OS_FRAME *mem_ptr);
+N
+N/* at_Ethernet.c */
+Nextern void eth_init_link (void);
+Nextern void eth_run_link (void);
+Nextern void put_in_queue (OS_FRAME *frame);
+Nextern BOOL eth_send_frame (OS_FRAME *frame);
+Nextern BOOL eth_chk_adr (OS_FRAME *frame);
+Nextern U8  *eth_get_adr (U8 *ipadr);
+N
+N/* at_Ppp.c */
+Nextern void ppp_init_link (void);
+Nextern void ppp_run_link (void);
+Nextern BOOL ppp_send_frame (OS_FRAME *frame, U16 prot);
+N
+N/* at_Ppp_Pap.c */
+Nextern void pap_init (void);
+Nextern void pap_process (OS_FRAME *frame);
+Nextern void pap_run (void);
+N
+N/* at_Ppp_Chap.c */
+Nextern void chap_init (void);
+Nextern void chap_process (OS_FRAME *frame);
+Nextern void chap_run (void);
+N
+N/* at_Slip.c */
+Nextern void slip_init_link (void);
+Nextern void slip_run_link (void);
+Nextern BOOL slip_send_frame (OS_FRAME *frame);
+N
+N/* at_Lib.c */
+Nextern int  mem_copy (void *dp, void *sp, int len);
+Nextern void mem_rcopy (void *dp, void *sp, int len);
+Nextern BOOL mem_comp (void *sp1, void *sp2, int len);
+Nextern void mem_set (void *dp, U8 val, int len);
+Nextern BOOL mem_test (void *sp, U8 val, int len);
+Nextern BOOL str_scomp (U8 *sp, U8 const *cp);
+Nextern int  str_copy (U8 *dp, U8 *sp);
+Nextern void str_up_case (U8 *dp, U8 *sp);
+N
+N/* at_Arp.c */
+Nextern void arp_notify (void);
+Nextern BOOL arp_get_info (REMOTEM *info);
+N
+N/* at_Ip.c */
+Nextern void ip_init (void);
+Nextern void ip_run_local (void);
+N
+N/* at_Dhcp.c */
+Nextern void dhcp_cbfunc (U8 opt, U8 *val, U16 len);
+N
+N/* at_Icmp.c */
+Nextern void icmp_init (void);
+Nextern void icmp_run_engine (void);
+N
+N/* at_Igmp.c */
+Nextern void igmp_init (void);
+Nextern void igmp_run_host (void);
+Nextern void igmp_process (OS_FRAME *frame);
+N
+N/* at_Udp.c */
+Nextern void udp_init (void);
+Nextern void udp_process (OS_FRAME *frame);
+N
+N/* at_Tcp.c */
+Nextern void tcp_init (void);
+Nextern void tcp_poll_sockets (void);
+Nextern void tcp_process (OS_FRAME *frame);
+N
+N/* at_Bsd.c */
+Nextern void bsd_init (void);
+Nextern void bsd_poll_sockets (void);
+Nextern U8   bsd_wait (BSD_INFO *bsd_s, U8 evt);
+Nextern void bsd_enable (BSD_INFO *bsd_s, U8 evt);
+N
+N/* at_Bsd_Host.c */
+Nextern void bsd_init_host (void);
+N
+N/* at_Http.c */
+Nextern void http_init (void);
+Nextern void http_run_server (void);
+Nextern void *http_fopen (U8 *name);
+Nextern void http_fclose (void *file);
+Nextern U16  http_fread (void *file, U8 *buf, U16 len);
+Nextern BOOL http_fgets (void *file, U8 *buf, U16 size);
+Nextern U32  http_finfo (U8 *name);
+Nextern void cgi_process_var (U8 *qstr);
+Nextern void cgi_process_data (U8 code, U8 *dat, U16 len);
+Nextern U16  cgi_func (U8 *env, U8 *buf, U16 buflen, U32 *pcgi);
+Nextern U8  *cgx_content_type (void);
+Nextern U8  *http_encoding (void);
+Nextern BOOL http_accept_host (U8 *rem_ip, U16 rem_port);
+Nextern BOOL http_file_access (U8 *fname, U8 user_id);
+Nextern U8   http_check_account (U8 *user, U8 *passw);
+Nextern U8  *http_get_var (U8 *env, void *ansi, U16 maxlen);
+Nextern U8  *http_get_lang (void);
+Nextern void http_get_info (REMOTEM *info);
+Nextern U8   http_get_session (void);
+Nextern U8   http_get_user_id (void);
+Nextern U8  *http_get_content_type (void);
+Nextern U32  http_date (RL_TIME *time);
+N
+N/* at_Telnet.c */
+Nextern void tnet_init (void);
+Nextern void tnet_run_server (void);
+Nextern U16  tnet_cbfunc (U8 code, U8 *buf, U16 buflen);
+Nextern U16  tnet_process_cmd (U8 *cmd, U8 *buf, U16 buflen, U32 *pvar);
+Nextern BOOL tnet_ccmp (U8 *buf, U8 *cmd);
+Nextern void tnet_set_delay (U16 dly);
+Nextern void tnet_get_info (REMOTEM *info);
+Nextern U8   tnet_get_session (void);
+Nextern U8   tnet_get_user_id (void);
+Nextern BOOL tnet_msg_poll (U8 session);
+Nextern BOOL tnet_accept_host (U8 *rem_ip, U16 rem_port);
+Nextern U8   tnet_check_account (U8 code, U8 *id);
+N
+N/* at_Tftp.c */
+Nextern void tftp_init (void);
+Nextern void tftp_run_server (void);
+Nextern void *tftp_fopen (U8 *fname, U8 *mode);
+Nextern void tftp_fclose (void *file);
+Nextern U16  tftp_fread (void *file, U8 *buf, U16 len);
+Nextern U16  tftp_fwrite (void *file, U8 *buf, U16 len);
+Nextern BOOL tftp_accept_host (U8 *rem_ip, U16 rem_port);
+N
+N/* at_Tftpc.c */
+Nextern void tftpc_init (void);
+Nextern void tftpc_run_client (void);
+Nextern void *tftpc_fopen (U8 *fname, U8 *mode);
+Nextern void tftpc_fclose (void *file);
+Nextern U16  tftpc_fread (void *file, U8 *buf, U16 len);
+Nextern U16  tftpc_fwrite (void *file, U8 *buf, U16 len);
+N
+N/* at_Ftp.c */
+Nextern void ftp_init (void);
+Nextern void ftp_run_server (void);
+Nextern void *ftp_fopen (U8 *fname, U8 *mode);
+Nextern void ftp_fclose (void *file);
+Nextern U16  ftp_fread (void *file, U8 *buf, U16 len);
+Nextern U16  ftp_fwrite (void *file, U8 *buf, U16 len);
+Nextern BOOL ftp_fdelete (U8 *fname);
+Nextern BOOL ftp_frename (U8 *fname, U8 *newn);
+Nextern U16  ftp_ffind (U8 code, U8 *buf, U8 *mask, U16 len);
+Nextern BOOL ftp_accept_host (U8 *rem_ip, U16 rem_port);
+Nextern U8   ftp_check_account (U8 code, U8 *id);
+Nextern U8   ftp_get_user_id (void);
+Nextern BOOL ftp_file_access (U8 *fname, U8 mode, U8 user_id);
+Nextern void ftp_evt_notify (U8 evt);
+N
+N/* at_Ftpc.c */
+Nextern void ftpc_init (void);
+Nextern void ftpc_run_client (void);
+Nextern void *ftpc_fopen (U8 *mode);
+Nextern void ftpc_fclose (void *file);
+Nextern U16  ftpc_fread (void *file, U8 *buf, U16 len);
+Nextern U16  ftpc_fwrite (void *file, U8 *buf, U16 len);
+Nextern U16  ftpc_cbfunc (U8 code, U8 *buf, U16 buflen);
+N
+N/* at_Dhcp.c */
+Nextern void dhcp_init (void);
+Nextern void dhcp_run_client (void);
+N#define init_dhcp   dhcp_init
+N
+N/* at_Nbns.c */
+Nextern void nbns_init (void);
+N
+N/* at_Dns.c */
+Nextern void dns_init (void);
+Nextern void dns_run_client (void);
+Nextern U8   get_host_by_name (U8 *hostn, void (*cbfunc)(U8, U8 *));
+N
+N/* at_Smtp.c */
+Nextern void smtp_init (void);
+Nextern void smtp_run_client (void);
+Nextern U16  smtp_cbfunc (U8 code, U8 *buf, U16 buflen, U32 *pvar);
+Nextern BOOL smtp_accept_auth (U8 *srv_ip);
+N
+N/* at_Snmp.c */
+Nextern void snmp_init (void);
+Nextern void snmp_run_agent (void);
+N
+N/* at_Sntp.c */
+Nextern void sntp_init (void);
+Nextern void sntp_run_client (void);
+N
+N/* Ethernet Device Driver */
+Nextern void init_ethernet (void);
+Nextern void send_frame (OS_FRAME *frame);
+N__weak void poll_ethernet (void);
+Nextern void int_enable_eth (void);
+Nextern void int_disable_eth (void);
+N
+N/* Serial Device Driver */
+Nextern void init_serial (void);
+Nextern int  com_getchar (void);
+Nextern BOOL com_putchar (U8 c);
+Nextern BOOL com_tx_active (void);
+N
+N/* Modem Device Driver */
+Nextern void modem_init (void);
+Nextern void modem_dial (U8 *dialnum);
+Nextern void modem_hangup (void);
+Nextern void modem_listen (void);
+Nextern BOOL modem_online (void);
+Nextern BOOL modem_process (U8 ch);
+Nextern void modem_run (void);
+N
+N#ifdef __cplusplus
+S}
+N#endif
+N
+N/*----------------------------------------------------------------------------
+N * end of file
+N *---------------------------------------------------------------------------*/
+N
+N#endif
+N
+L 13 "..\..\RL-ARM\Config\Net_Config.c" 2
+N
+N//-------- <<< Use Configuration Wizard in Context Menu >>> -----------------
+N//
+N// <h>System Definitions
+N// =====================
+N// <i> Global TCPnet System definitions
+N//   <s.15>Local Host Name
+N//   <i> This is the name under which embedded host
+N//   <i> can be accessed on a local area network.
+N//   <i> Default: "mcb2300"
+N#define LHOST_NAME     "armfly"
+N
+N//   <o>Memory Pool size <1536-262144:4><#/4>
+N//   <i> This is the size of a memory pool in bytes. Buffers for
+N//   <i> TCPnet packets are allocated from this memory pool.
+N//   <i> Default: 8000 bytes
+N#define MEM_SIZE       2048
+N
+N//   <o>Tick Timer interval <10=> 10 ms <20=> 20 ms <25=> 25 ms
+N//                          <40=> 40 ms <50=> 50 ms <100=> 100 ms 
+N//                          <200=> 200 ms
+N//   <i> System Tick Timer interval for software timers
+N//   <i> Default: 100 ms
+N#define TICK_INTERVAL  100
+N
+N// </h>
+N// <e>Ethernet Network Interface
+N// =============================
+N// <i> Enable or disable Ethernet Network Interface
+N#define ETH_ENABLE     1
+N
+N//   <h>MAC Address
+N//   ==============
+N//   <i> Local Ethernet MAC Address
+N//   <i> Value FF:FF:FF:FF:FF:FF is not allowed.
+N//   <i> It is an ethernet Broadcast MAC address.
+N//     <o>Address byte 1 <0x00-0xff:2>
+N//     <i> LSB is an ethernet Multicast bit.
+N//     <i> Must be 0 for local MAC address.
+N//     <i> Default: 0x00
+N#define _MAC1          0x1E
+N
+N//     <o>Address byte 2 <0x00-0xff>
+N//     <i> Default: 0x30
+N#define _MAC2          0x30
+N
+N//     <o>Address byte 3 <0x00-0xff>
+N//     <i> Default: 0x6C
+N#define _MAC3          0x6C
+N
+N//     <o>Address byte 4 <0x00-0xff>
+N//     <i> Default: 0x00
+N#define _MAC4          0xA2
+N
+N//     <o>Address byte 5 <0x00-0xff>
+N//     <i> Default: 0x00
+N#define _MAC5          0x45
+N
+N//     <o>Address byte 6 <0x00-0xff>
+N//     <i> Default: 0x01
+N#define _MAC6          0x5E
+N
+N//   </h>
+N//   <h>IP Address
+N//   =============
+N//   <i> Local Static IP Address
+N//   <i> Value 255.255.255.255 is not allowed.
+N//   <i> It is a Broadcast IP address.
+N//     <o>Address byte 1 <0-255>
+N//     <i> Default: 192
+N#define _IP1           192
+N
+N//     <o>Address byte 2 <0-255>
+N//     <i> Default: 168
+N#define _IP2           168
+N
+N//     <o>Address byte 3 <0-255>
+N//     <i> Default: 0
+N#define _IP3           80
+N
+N//     <o>Address byte 4 <0-255>
+N//     <i> Default: 100
+N#define _IP4           100
+N
+N//   </h>
+N//   <h>Subnet mask
+N//   ==============
+N//   <i> Local Subnet mask
+N//     <o>Mask byte 1 <0-255>
+N//     <i> Default: 255
+N#define _MSK1          255
+N
+N//     <o>Mask byte 2 <0-255>
+N//     <i> Default: 255
+N#define _MSK2          255
+N
+N//     <o>Mask byte 3 <0-255>
+N//     <i> Default: 255
+N#define _MSK3          255
+N
+N//     <o>Mask byte 4 <0-255>
+N//     <i> Default: 0
+N#define _MSK4          0
+N
+N//   </h>
+N//   <h>Default Gateway
+N//   ==================
+N//   <i> Default Gateway IP Address
+N//     <o>Address byte 1 <0-255>
+N//     <i> Default: 192
+N#define _GW1           192
+N
+N//     <o>Address byte 2 <0-255>
+N//     <i> Default: 168
+N#define _GW2           168
+N
+N//     <o>Address byte 3 <0-255>
+N//     <i> Default: 0
+N#define _GW3           1
+N
+N//     <o>Address byte 4 <0-255>
+N//     <i> Default: 254
+N#define _GW4           1
+N
+N//   </h>
+N//   <h>Primary DNS Server
+N//   =====================
+N//   <i> Primary DNS Server IP Address
+N//     <o>Address byte 1 <0-255>
+N//     <i> Default: 194
+N#define _pDNS1         194
+N
+N//     <o>Address byte 2 <0-255>
+N//     <i> Default: 25
+N#define _pDNS2         25
+N
+N//     <o>Address byte 3 <0-255>
+N//     <i> Default: 2
+N#define _pDNS3         2
+N
+N//     <o>Address byte 4 <0-255>
+N//     <i> Default: 129
+N#define _pDNS4         129
+N
+N//   </h>
+N//   <h>Secondary DNS Server
+N//   =======================
+N//   <i> Secondary DNS Server IP Address
+N//     <o>Address byte 1 <0-255>
+N//     <i> Default: 194
+N#define _sDNS1         194
+N
+N//     <o>Address byte 2 <0-255>
+N//     <i> Default: 25
+N#define _sDNS2         25
+N
+N//     <o>Address byte 3 <0-255>
+N//     <i> Default: 2
+N#define _sDNS3         2
+N
+N//     <o>Address byte 4 <0-255>
+N//     <i> Default: 130
+N#define _sDNS4         130
+N
+N//   </h>
+N//   <h>ARP Definitions
+N//   ==================
+N//   <i> Address Resolution Protocol Definitions
+N//     <o>Cache Table size <5-100>
+N//     <i> Number of cached hardware/IP addresses
+N//     <i> Default: 10
+N#define ARP_TABSIZE    10
+N
+N//     <o>Cache Timeout in seconds <5-255>
+N//     <i> A timeout for a cached hardware/IP addresses
+N//     <i> Default: 150
+N#define ARP_TIMEOUT    150
+N
+N//     <o>Number of Retries <0-20>
+N//     <i> Number of Retries to resolve an IP address
+N//     <i> before ARP module gives up
+N//     <i> Default: 4
+N#define ARP_MAXRETRY   4
+N
+N//     <o>Resend Timeout in seconds <1-10>
+N//     <i> A timeout to resend the ARP Request
+N//     <i> Default: 2
+N#define ARP_RESEND     2
+N
+N//     <q>Send Notification on Address changes
+N//     <i> When this option is enabled, the embedded host
+N//     <i> will send a Gratuitous ARP notification at startup,
+N//     <i> or when the device IP address has changed.
+N//     <i> Default: Disabled
+N#define ARP_NOTIFY     0
+N
+N//   </h>
+N//   <e>IGMP Group Management
+N//   ========================
+N//   <i> Enable or disable Internet Group Management Protocol
+N#define IGMP_ENABLE    0
+N
+N//     <o>Membership Table size <2-50>
+N//     <i> Number of Groups this host can join
+N//     <i> Default: 5
+N#define IGMP_TABSIZE   5
+N
+N//   </e>
+N//   <q>NetBIOS Name Service
+N//   =======================
+N//   <i> When this option is enabled, the embedded host can be
+N//   <i> accessed by his name on the local LAN using NBNS protocol.
+N#define NBNS_ENABLE    1
+N
+N//   <e>Dynamic Host Configuration
+N//   =============================
+N//   <i> When this option is enabled, local IP address, Net Mask
+N//   <i> and Default Gateway are obtained automatically from
+N//   <i> the DHCP Server on local LAN.
+N#define DHCP_ENABLE    0
+N
+N//     <s.40>Vendor Class Identifier
+N//     <i> This value is optional. If specified, it is added
+N//     <i> to DHCP request message, identifying vendor type.
+N//     <i> Default: ""
+N#define DHCP_VCID      ""
+N
+N//     <q>Bootfile Name
+N//     <i> This value is optional. If enabled, the Bootfile Name
+N//     <i> (option 67) is also requested from DHCP server.
+N//     <i> Default: disabled
+N#define DHCP_BOOTF     0
+N
+N//     <q>NTP Servers
+N//     <i> This value is optional. If enabled, a list of NTP Servers
+N//     <i> (option 42) is also requested from DHCP server.
+N//     <i> Default: disabled
+N#define DHCP_NTPSRV    1
+N
+N//   </e>
+N// </e>
+N
+N// <e>PPP Network Interface
+N// ========================
+N// <i> Enable or disable PPP Network Interface
+N#define PPP_ENABLE     0
+N
+N//   <h>IP Address
+N//   =============
+N//   <i> Local Static IP Address
+N//     <o>Address byte 1 <0-255>
+N//     <i> Default: 192
+N#define _IP1P          192
+N
+N//     <o>Address byte 2 <0-255>
+N//     <i> Default: 168
+N#define _IP2P          168
+N
+N//     <o>Address byte 3 <0-255>
+N//     <i> Default: 125
+N#define _IP3P          125
+N
+N//     <o>Address byte 4 <0-255>
+N//     <i> Default: 1
+N#define _IP4P          1
+N
+N//   </h>
+N//   <h>Subnet mask
+N//   ==============
+N//   <i> Local Subnet mask
+N//     <o>Mask byte 1 <0-255>
+N//     <i> Default: 255
+N#define _MSK1P         255
+N
+N//     <o>Mask byte 2 <0-255>
+N//     <i> Default: 255
+N#define _MSK2P         255
+N
+N//     <o>Mask byte 3 <0-255>
+N//     <i> Default: 255
+N#define _MSK3P         255
+N
+N//     <o>Mask byte 4 <0-255>
+N//     <i> Default: 0
+N#define _MSK4P         0
+N
+N//   </h>
+N//   <h>Primary DNS Server
+N//   =====================
+N//   <i> Primary DNS Server IP Address
+N//     <o>Address byte 1 <0-255>
+N//     <i> Default: 194
+N#define _pDNS1P        194
+N
+N//     <o>Address byte 2 <0-255>
+N//     <i> Default: 25
+N#define _pDNS2P        25
+N
+N//     <o>Address byte 3 <0-255>
+N//     <i> Default: 2
+N#define _pDNS3P        2
+N
+N//     <o>Address byte 4 <0-255>
+N//     <i> Default: 129
+N#define _pDNS4P        129
+N
+N//   </h>
+N//   <h>Secondary DNS Server
+N//   =======================
+N//   <i> Secondary DNS Server IP Address
+N//     <o>Address byte 1 <0-255>
+N//     <i> Default: 194
+N#define _sDNS1P        194
+N
+N//     <o>Address byte 2 <0-255>
+N//     <i> Default: 25
+N#define _sDNS2P        25
+N
+N//     <o>Address byte 3 <0-255>
+N//     <i> Default: 2
+N#define _sDNS3P        2
+N
+N//     <o>Address byte 4 <0-255>
+N//     <i> Default: 130
+N#define _sDNS4P        130
+N
+N//   </h>
+N//   <e>Logon Authentication
+N//   =======================
+N//   <i> Enable or disable user authentication
+N#define PPP_AUTHEN     1
+N
+N//     <q>Unsecured password (PAP)
+N//     <i>Allow or use Password Authentication Protocol.
+N#define PPP_PAPEN      1
+N
+N//     <q>Secured password (CHAP-MD5)
+N//     <i>Request or use Challenge Handshake Authentication
+N//     <i>Protocol with MD5 digest algorithm.
+N#define PPP_CHAPEN     1
+N
+N//   </e>
+N//   <q>Obtain Client IP address automatically
+N//   =========================================
+N//   <i> This option only applies when PPP Dial-up is used to dial
+N//   <i> to remote PPP Server. If checked, network connection
+N//   <i> dynamically obtains an IP address from remote PPP Server.
+N#define PPP_GETIP      1
+N
+N//   <q>Use Default Gateway on remote Network
+N//   ========================================
+N//   <i> This option only applies when both Ethernet and PPP Dial-up
+N//   <i> are used. If checked, data that cannot be sent to local LAN
+N//   <i> is forwarded to Dial-up network instead.
+N#define PPP_DEFGW      1
+N
+N//   <o>Async Control Character Map <0x0-0xffffffff>
+N//   <i> A bit-map of control characters 0-31, which are
+N//   <i> transmitted escaped as a 2 byte sequence.
+N//   <i> For XON/XOFF set this value to: 0x000A 0000
+N//   <i> Default: 0x00000000
+N#define PPP_ACCM       0x00000000
+N
+N//   <o>LCP Echo Interval in seconds <0-3600>
+N//   <i> If no frames are received within this interval, PPP sends an
+N//   <i> Echo Request and expects an Echo Response from the peer.
+N//   <i> If the response is not received, the link is terminated.
+N//   <i> A value of 0 disables the LCP Echo test.
+N//   <i> Default: 30
+N#define PPP_ECHOTOUT   30
+N
+N//   <o>Number of Retries <0-20>
+N//   <i> How many times PPP will try to retransmit data
+N//   <i> before giving up. Increase this value for links
+N//   <i> with low baud rates or high latency.
+N//   <i> Default: 3
+N#define PPP_MAXRETRY   3
+N
+N//   <o>Retry Timeout in seconds <1-10>
+N//   <i> If no response received within this time frame,
+N//   <i> PPP module will try to resend the data again.
+N//   <i> Default: 2
+N#define PPP_RETRYTOUT  2
+N
+N// </e>
+N// <e>SLIP Network Interface
+N// ========================
+N// <i> Enable or disable SLIP Network Interface
+N#define SLIP_ENABLE    0
+N
+N//   <h>IP Address
+N//   =============
+N//   <i> Local Static IP Address
+N//     <o>Address byte 1 <0-255>
+N//     <i> Default: 192
+N#define _IP1S          192
+N
+N//     <o>Address byte 2 <0-255>
+N//     <i> Default: 168
+N#define _IP2S          168
+N
+N//     <o>Address byte 3 <0-255>
+N//     <i> Default: 225
+N#define _IP3S          225
+N
+N//     <o>Address byte 4 <0-255>
+N//     <i> Default: 1
+N#define _IP4S          1
+N
+N//   </h>
+N//   <h>Subnet mask
+N//   ==============
+N//   <i> Local Subnet mask
+N//     <o>Mask byte 1 <0-255>
+N//     <i> Default: 255
+N#define _MSK1S         255
+N
+N//     <o>Mask byte 2 <0-255>
+N//     <i> Default: 255
+N#define _MSK2S         255
+N
+N//     <o>Mask byte 3 <0-255>
+N//     <i> Default: 255
+N#define _MSK3S         255
+N
+N//     <o>Mask byte 4 <0-255>
+N//     <i> Default: 0
+N#define _MSK4S         0
+N
+N//   </h>
+N//   <h>Primary DNS Server
+N//   =====================
+N//   <i> Primary DNS Server IP Address
+N//     <o>Address byte 1 <0-255>
+N//     <i> Default: 194
+N#define _pDNS1S        194
+N
+N//     <o>Address byte 2 <0-255>
+N//     <i> Default: 25
+N#define _pDNS2S        25
+N
+N//     <o>Address byte 3 <0-255>
+N//     <i> Default: 2
+N#define _pDNS3S        2
+N
+N//     <o>Address byte 4 <0-255>
+N//     <i> Default: 129
+N#define _pDNS4S        129
+N
+N//   </h>
+N//   <h>Secondary DNS Server
+N//   =======================
+N//   <i> Secondary DNS Server IP Address
+N//     <o>Address byte 1 <0-255>
+N//     <i> Default: 194
+N#define _sDNS1S        194
+N
+N//     <o>Address byte 2 <0-255>
+N//     <i> Default: 25
+N#define _sDNS2S        25
+N
+N//     <o>Address byte 3 <0-255>
+N//     <i> Default: 2
+N#define _sDNS3S        2
+N
+N//     <o>Address byte 4 <0-255>
+N//     <i> Default: 130
+N#define _sDNS4S        130
+N
+N//   </h>
+N//   <q>Use Default Gateway on remote Network
+N//   ========================================
+N//   <i> This option only applies when both Ethernet and SLIP Dial-up
+N//   <i> are used. If checked, data that cannot be sent to local LAN
+N//   <i> is forwarded to Dial-up network instead.
+N#define SLIP_DEFGW     1
+N
+N// </e>
+N// <e>UDP Sockets
+N// ==============
+N// <i> Enable or disable UDP Sockets
+N#define UDP_ENABLE     1
+N
+N//   <o>Number of UDP Sockets <1-20>
+N//   <i> Number of available UDP sockets
+N//   <i> Default: 5
+N#define UDP_NUMSOCKS   2
+N
+N// </e>
+N// <e>TCP Sockets
+N// ==============
+N// <i> Enable or disable TCP Sockets
+N#define TCP_ENABLE     1
+N
+N//   <o>Number of TCP Sockets <1-20>
+N//   <i> Number of available TCP sockets
+N//   <i> Default: 5
+N#define TCP_NUMSOCKS   2
+N
+N//   <o>Number of Retries <0-20>
+N//   <i> How many times TCP module will try to retransmit data
+N//   <i> before giving up. Increase this value for high-latency
+N//   <i> and low_throughput networks.
+N//   <i> Default: 5
+N#define TCP_MAXRETRY   5
+N
+N//   <o>Retry Timeout in seconds <1-10>
+N//   <i> If data frame not acknowledged within this time frame,
+N//   <i> TCP module will try to resend the data again.
+N//   <i> Default: 4
+N#define TCP_RETRYTOUT  4
+N
+N//   <o>Default Connect Timeout in seconds <1-600>
+N//   <i> Default TCP Socket Keep Alive timeout. When it expires
+N//   <i> with no TCP data frame send, TCP Connection is closed.
+N//   <i> Default: 120
+N#define TCP_DEFTOUT    120
+N
+N//   <o>Maximum Segment Size <536-1460>
+N//   <i> The Maximum Segment Size specifies the maximum
+N//   <i> number of bytes in the TCP segment's Data field.
+N//   <i> Default: 1460
+N#define TCP_MAXSEGSZ   1460
+N
+N//   <o>Receive Window Size <536-65535>
+N//   <i> Receive Window Size specifies the size of data, 
+N//   <i> that the socket is able to buffer in flow-control mode.
+N//   <i> Default: 4380
+N#define TCP_RECWINSZ   4380
+N
+N/* TCP fixed timeouts */
+N#define TCP_INIT_RETRY_TOUT 1     /* TCP initial Retransmit period in sec.   */
+N#define TCP_SYN_RETRY_TOUT  2     /* TCP SYN frame retransmit period in sec. */
+N#define TCP_CONRETRY        7     /* Number of retries to establish a conn.  */
+N
+N// </e>
+N// <e>HTTP Server
+N// ==============
+N// <i> Enable or disable HTTP Server
+N#define HTTP_ENABLE    0
+N
+N//   <o>Number of HTTP Sessions <1-10>
+N//   <i> Number of simultaneously active HTTP Sessions.
+N//   <i> Default: 3
+N#define HTTP_NUMSESS   5
+N
+N//   <o>Port Number <1-65535>
+N//   <i> Listening port number.
+N//   <i> Default: 80
+N#define HTTP_PORTNUM   80
+N
+N//   <s.50>Server-Id header
+N//   <i> This value is optional. If specified, it overrides 
+N//   <i> the default HTTP Server header from the library.
+N//   <i> Default: ""
+N#define HTTP_SRVID     ""
+N
+N//   <e>Enable User Authentication
+N//     <i> When enabled, the user will have to authenticate
+N//     <i> himself by username and password before accessing
+N//     <i> any page on this Embedded WEB server.
+N#define HTTP_ENAUTH    1
+N
+N//     <s.20>Authentication Realm
+N//     <i> Default: "Embedded WEB Server"
+N#define HTTP_AUTHREALM "Embedded WEB Server"
+N
+N//     <s.15>Authentication Username
+N//     <i> Default: "admin"
+N#define HTTP_AUTHUSER  "admin"
+N
+N//     <s.15>Authentication Password
+N//     <i> Default: ""
+N#define HTTP_AUTHPASSW ""
+N
+N//   </e>
+N// </e>
+N// <e>Telnet Server
+N// ================
+N// <i> Enable or disable Telnet Server
+N#define TNET_ENABLE    0
+N
+N//   <o>Number of Telnet Connections <1-10>
+N//   <i> Number of simultaneously active Telnet Connections.
+N//   <i> Default: 1
+N#define TNET_NUMSESS   2
+N
+N//   <o>Port Number <1-65535>
+N//   <i> Listening port number.
+N//   <i> Default: 23
+N#define TNET_PORTNUM   23
+N
+N//   <o>Idle Connection Timeout in seconds <0-3600>
+N//   <i> When timeout expires, the connection is closed.
+N//   <i> A value of 0 disables disconnection on timeout.
+N//   <i> Default: 120
+N#define TNET_IDLETOUT  120
+N
+N//   <q>Disable Echo
+N//   <i> When disabled, the server will not echo
+N//   <i> characters it receives.
+N//   <i> Default: Not disabled
+N#define TNET_NOECHO    0
+N
+N//   <e>Enable User Authentication
+N//   <i> When enabled, the user will have to authenticate
+N//   <i> himself by username and password before access
+N//   <i> to the system is allowed.
+N#define TNET_ENAUTH    1
+N
+N//     <s.15>Authentication Username
+N//     <i> Default: "admin"
+N#define TNET_AUTHUSER  "admin"
+N
+N//     <s.15>Authentication Password
+N//     <i> Default: ""
+N#define TNET_AUTHPASSW ""
+N
+N//   </e>
+N// </e>
+N// <e>TFTP Server
+N// ==============
+N// <i> Enable or disable TFTP Server
+N#define TFTP_ENABLE    0
+N
+N//   <o>Number of TFTP Sessions <1-10>
+N//   <i> Number of simultaneously active TFTP Sessions
+N//   <i> Default: 1
+N#define TFTP_NUMSESS   1
+N
+N//   <o>Port Number <1-65535>
+N//   <i> Listening port number.
+N//   <i> Default: 69
+N#define TFTP_PORTNUM   69
+N
+N//   <q>Enable Firewall Support
+N//   <i> Use the same Port Number to receive
+N//   <i> requests and send answers to clients.
+N//   <i> Default: Not Enabled
+N#define TFTP_ENFWALL   0
+N
+N//   <o>Inactive Session Timeout in seconds <5-120>
+N//   <i> When timeout expires TFTP Session is closed.
+N//   <i> Default: 15
+N#define TFTP_DEFTOUT   15
+N
+N//   <o>Number of Retries <1-10>
+N//   <i> How many times TFTP Server will try to
+N//   <i> retransmit the data before giving up.
+N//   <i> Default: 4
+N#define TFTP_MAXRETRY  4
+N
+N// </e>
+N// <e>TFTP Client
+N// ==============
+N// <i> Enable or disable TFTP Client
+N#define TFTPC_ENABLE   0
+N
+N//   <o>Block Size <128=>128   <256=>256   <512=>512
+N//                 <1024=>1024 <1428=>1428
+N//   <i> Size of transfer block in bytes.
+N//   <i> Default: 512
+N#define TFTPC_BLOCKSZ  512
+N
+N//   <o>Number of Retries <1-10>
+N//   <i> How many times TFTP Client will try to
+N//   <i> retransmit the data before giving up.
+N//   <i> Default: 4
+N#define TFTPC_MAXRETRY 4
+N
+N//   <o>Retry Timeout <2=>200 ms <5=>500 ms <10=>1 sec
+N//                    <20=>2 sec <50=>5 sec <100=>10 sec
+N//   <i> If data frame not acknowledged within this time frame,
+N//   <i> TFTP Client will try to resend the data again.
+N//   <i> Default: 500 ms
+N#define TFTPC_RETRYTO  5
+N
+N// </e>
+N// <e>FTP Server
+N// ==============
+N// <i> Enable or disable FTP Server
+N#define FTP_ENABLE     0
+N
+N//   <o>Number of FTP Sessions <1-10>
+N//   <i> Number of simultaneously active FTP Sessions
+N//   <i> Default: 1
+N#define FTP_NUMSESS    3
+N
+N//   <o>Port Number <1-65535>
+N//   <i> Listening port number.
+N//   <i> Default: 21
+N#define FTP_PORTNUM    21
+N
+N//   <s.50>Welcome Message
+N//   <i> This value is optional. If specified,
+N//   <i> it overrides the default welcome message.
+N//   <i> Default: ""
+N#define FTP_WELMSG     ""
+N
+N//   <o>Idle Session Timeout in seconds <0-3600>
+N//   <i> When timeout expires, the connection is closed.
+N//   <i> A value of 0 disables disconnection on timeout.
+N//   <i> Default: 120
+N#define FTP_IDLETOUT   120
+N
+N//   <e>Enable User Authentication
+N//   <i> When enabled, the user will have to authenticate
+N//   <i> himself by username and password before access
+N//   <i> to the system is allowed.
+N#define FTP_ENAUTH     1
+N
+N//     <s.15>Authentication Username
+N//     <i> Default: "admin"
+N#define FTP_AUTHUSER   "admin"
+N
+N//     <s.15>Authentication Password
+N//     <i> Default: ""
+N#define FTP_AUTHPASSW  ""
+N
+N//   </e>
+N// </e>
+N// <e>FTP Client
+N// =============
+N// <i> Enable or disable FTP Client
+N#define FTPC_ENABLE    0
+N
+N//     <o>Response Timeout in seconds <1-120>
+N//     <i> This is a time for FTP Client to wait for a response from
+N//     <i> the Server. If timeout expires, Client aborts operation.
+N//     <i> Default: 10
+N#define FTPC_DEFTOUT   10
+N
+N//     <q>Passive mode (PASV)
+N//     <i> The client initiates a data connection to the server.
+N//     <i> Default: Not passive (Active)
+N#define FTPC_PASVMODE  0
+N
+N// </e>
+N// <e>DNS Client
+N// =============
+N// <i> Enable or disable DNS Client
+N#define DNS_ENABLE     0
+N
+N//     <o>Cache Table size <5-100>
+N//     <i> Number of cached DNS host names/IP addresses
+N//     <i> Default: 20
+N#define DNS_TABSIZE    20
+N
+N// </e>
+N// <e>SMTP Client
+N// ==============
+N// <i> Enable or disable SMTP Client
+N#define SMTP_ENABLE    0
+N
+N//     <o>Response Timeout in seconds <5-120>
+N//     <i> This is a time for SMTP Client to wait for a response from
+N//     <i> SMTP Server. If timeout expires, Client aborts operation.
+N//     <i> Default: 20
+N#define SMTP_DEFTOUT   20
+N
+N// </e>
+N// <e>SNMP Agent
+N// =============
+N// <i> Enable or disable SNMP Agent
+N#define SNMP_ENABLE    0
+N
+N//   <s.15>Community Name
+N//   <i> Defines where an SNMP message is destined for.
+N//   <i> Default: "public"
+N#define SNMP_COMMUNITY "public"
+N
+N//   <o>Port Number <1-65535>
+N//   <i> Listening port number.
+N//   <i> Default: 161
+N#define SNMP_PORTNUM   161
+N
+N//   <o>Trap Port Number <1-65535>
+N//   <i> Port number for Trap operations.
+N//   <i> Default: 162
+N#define SNMP_TRAPPORT  162
+N
+N//   <h>Trap Server
+N//   ==============
+N//   <i> Trap Server IP Address
+N//   <o>Address byte 1 <0-255>
+N//   <i> Default: 192
+N#define SNMP_TRAPIP1   192
+N
+N//   <o>Address byte 2 <0-255>
+N//   <i> Default: 168
+N#define SNMP_TRAPIP2   168
+N
+N//   <o>Address byte 3 <0-255>
+N//   <i> Default: 0
+N#define SNMP_TRAPIP3   0
+N
+N//   <o>Address byte 4 <0-255>
+N//   <i> Default: 100
+N#define SNMP_TRAPIP4   1
+N
+N//   </h>
+N// </e>
+N// <e>SNTP Client
+N// ==============
+N// <i> Enable or disable SNTP Client
+N#define SNTP_ENABLE    0
+N
+N//   <q>Broadcast Mode
+N//   =================
+N//   <i> Enable this option, if you have NTP/SNTP server
+N//   <i> on LAN, which is broadcasting NTP time messages.
+N//   <i> Disable this option to access public NTP server.
+N//   <i> Default: disabled
+N#define SNTP_BCMODE    0
+N
+N//   <h>NTP Server
+N//   =============
+N//   <i> Server IP Address
+N//   <o>Address byte 1 <0-255>
+N//   <i> Default: 217
+N#define SNTP_SRVIP1    217
+N
+N//   <o>Address byte 2 <0-255>
+N//   <i> Default: 79
+N#define SNTP_SRVIP2    79
+N
+N//   <o>Address byte 3 <0-255>
+N//   <i> Default: 179
+N#define SNTP_SRVIP3    179
+N
+N//   <o>Address byte 4 <0-255>
+N//   <i> Default: 106
+N#define SNTP_SRVIP4    106
+N
+N//   </h>
+N// </e>
+N// <e>BSD Socket Interface
+N// =======================
+N// <i> Enable or disable Berkeley Socket Programming Interface
+N#define BSD_ENABLE     0
+N
+N//   <o>Number of BSD Sockets <1-20>
+N//   <i> Number of available Berkeley Sockets
+N//   <i> Default: 2
+N#define BSD_NUMSOCKS   2
+N
+N//   <o>Number of Streaming Server Sockets <0-20>
+N//   <i> Defines a number of Streaming (TCP) Server sockets,
+N//   <i> that listen for an incoming connection from the client.
+N//   <i> Default: 1
+N#define BSD_SRVSOCKS   1
+N
+N//   <o>Receive Timeout in seconds <0-600>
+N//   <i> A timeout for socket receive in blocking mode.
+N//   <i> Timeout value of 0 means indefinite timeout.
+N//   <i> Default: 20
+N#define BSD_RCVTOUT    20
+N
+N//   <q>Hostname Resolver
+N//   <i> Enable or disable Berkeley style hostname resolver.
+N#define BSD_GETHOSTEN  0
+N
+N// </e>
+N//------------- <<< end of configuration section >>> -----------------------
+N
+N/*----------------------------------------------------------------------------
+N *      Fatal Error Handler
+N *---------------------------------------------------------------------------*/
+N
+Nvoid sys_error (ERROR_CODE code) {
+N  /* This function is called when a fatal error is encountered. The normal */
+N  /* program execution is not possible anymore. Add your crytical error   .*/
+N  /* handler code here.                                                    */
+N
+N  switch (code) {
+N    case ERR_MEM_ALLOC:
+N      /* Out of memory. */
+N      break;
+N
+N    case ERR_MEM_FREE:
+N      /* Trying to release non existing memory block. */
+N      break;
+N
+N    case ERR_MEM_CORRUPT:
+N      /* Memory Link pointer is Corrupted. */
+N      /* More data written than the size of allocated mem block. */
+N      break;
+N
+N    case ERR_MEM_LOCK:
+N      /* Locked Memory management function (alloc/free) re-entered. */
+N      /* RTX multithread protection malfunctioning, not implemented */
+N      /* or interrupt disable is not functioning correctly. */
+N      break;
+N
+N    case ERR_UDP_ALLOC:
+N      /* Out of UDP Sockets. */
+N      break;
+N
+N    case ERR_TCP_ALLOC:
+N      /* Out of TCP Sockets. */
+N      break;
+N
+N    case ERR_TCP_STATE:
+N      /* TCP State machine in undefined state. */
+N      break;
+N  }
+N
+N  /* End-less loop */
+N  while (1);
+N}
+N
+N/*----------------------------------------------------------------------------
+N *      TCPnet Config Functions
+N *---------------------------------------------------------------------------*/
+N
+N#define  __NET_CONFIG__
+N
+N#include <Net_lib.c>
+L 1 "..\..\RL-ARM\Config\Net_lib.c" 1
+N/*----------------------------------------------------------------------------
+N *      RL-ARM - TCPnet
+N *----------------------------------------------------------------------------
+N *      Name:    NET_LIB.C
+N *      Purpose: TCPnet System Configuration
+N *      Rev.:    V4.72
+N *----------------------------------------------------------------------------
+N *      This code is part of the RealView Run-Time Library.
+N *      Copyright (c) 2004-2013 KEIL - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#pragma thumb
+N#pragma O3
+N
+N/*----------------------------------------------------------------------------
+N *      Library for Net_Config.c
+N *---------------------------------------------------------------------------*/
+N
+N#ifdef __NET_CONFIG__
+N
+N/* Non-Critical Net_Config.c upgrade */
+N#ifndef HTTP_SRVID
+S #define HTTP_SRVID     ""
+N#endif
+N#ifndef FTP_WELMSG
+S #define FTP_WELMSG     ""
+N#endif
+N#ifndef DHCP_VCID
+S #define DHCP_VCID      ""
+N#endif
+N#ifndef DHCP_BOOTF
+S #define DHCP_BOOTF     0
+N#endif
+N#ifndef DHCP_NTPSRV
+S #define DHCP_NTPSRV    0
+N#endif
+N#ifndef TNET_NOECHO
+S #define TNET_NOECHO    0
+N#endif
+N#ifndef TFTP_ENFWALL
+S #define TFTP_ENFWALL   0
+N#endif
+N#ifndef TCP_MAXSEGSZ
+S #define TCP_MAXSEGSZ   1460
+N#endif
+N#ifndef TCP_RECWINSZ
+S #define TCP_RECWINSZ   TCP_DEF_WINSIZE
+N#endif
+N
+N#define TICK_RATE       (1000 / TICK_INTERVAL)
+N
+N/* Some configuration error checking. */
+N#if !(SLIP_ENABLE || PPP_ENABLE || ETH_ENABLE)
+X#if !(0 || 0 || 1)
+S #error All network interfaces disabled in configuration
+N#endif
+N
+N#if (SLIP_ENABLE && PPP_ENABLE)
+X#if (0 && 0)
+S #error Both SLIP and PPP interfaces enabled
+N#endif
+N
+N/* Check TCP Socket enable. */
+N#if (!TCP_ENABLE & (BSD_ENABLE | HTTP_ENABLE | TNET_ENABLE | FTP_ENABLE | \
+N                    FTPC_ENABLE | SMTP_ENABLE))
+X#if (!1 & (0 | 0 | 0 | 0 |                     0 | 0))
+S #error Application needs TCP Sockets enabled
+N#endif
+N
+N/* Check UDP Socket enable */
+N#if (!UDP_ENABLE & (BSD_ENABLE | TFTP_ENABLE | DNS_ENABLE | SNMP_ENABLE | \
+N                    SNTP_ENABLE | ((DHCP_ENABLE | NBNS_ENABLE) & ETH_ENABLE)))
+X#if (!1 & (0 | 0 | 0 | 0 |                     0 | ((0 | 1) & 1)))
+S #error Application needs UDP Sockets enabled
+N#endif
+N
+N/* Check number of TCP sockets available. */
+N#define __TCPNS    ((BSD_ENABLE  * BSD_NUMSOCKS)   + \
+N                    (HTTP_ENABLE * HTTP_NUMSESS)   + \
+N                    (TNET_ENABLE * TNET_NUMSESS)   + \
+N                    (FTP_ENABLE  * FTP_NUMSESS*2)  + \
+N                    (FTPC_ENABLE * 2)              + \
+N                    (SMTP_ENABLE * 1))
+X#define __TCPNS    ((BSD_ENABLE  * BSD_NUMSOCKS)   +                     (HTTP_ENABLE * HTTP_NUMSESS)   +                     (TNET_ENABLE * TNET_NUMSESS)   +                     (FTP_ENABLE  * FTP_NUMSESS*2)  +                     (FTPC_ENABLE * 2)              +                     (SMTP_ENABLE * 1))
+N
+N#if (__TCPNS > TCP_NUMSOCKS)
+X#if (((0 * 2) + (0 * 5) + (0 * 2) + (0 * 3*2) + (0 * 2) + (0 * 1)) > 2)
+S #error Number of TCP Sockets too small
+N#endif
+N
+N/* Calculate number of UDP sockets needed for TFTP server. */
+N#if (TFTP_ENFWALL)
+X#if (0)
+S #define __TFTP_NSOCKS  1
+N#else
+N #define __TFTP_NSOCKS  (1 + TFTP_NUMSESS)
+N#endif
+N
+N/* Check number of UDP sockets available. */
+N#define __UDPNS    ((BSD_ENABLE  * BSD_NUMSOCKS)   + \
+N                    (TFTP_ENABLE * __TFTP_NSOCKS)  + \
+N                    (TFTPC_ENABLE* 1)              + \
+N                    (DNS_ENABLE  * 1)              + \
+N                    (SNMP_ENABLE * 1)              + \
+N                    (SNTP_ENABLE * 1)              + \
+N                    (DHCP_ENABLE * ETH_ENABLE)     + \
+N                    (NBNS_ENABLE * ETH_ENABLE))
+X#define __UDPNS    ((BSD_ENABLE  * BSD_NUMSOCKS)   +                     (TFTP_ENABLE * __TFTP_NSOCKS)  +                     (TFTPC_ENABLE* 1)              +                     (DNS_ENABLE  * 1)              +                     (SNMP_ENABLE * 1)              +                     (SNTP_ENABLE * 1)              +                     (DHCP_ENABLE * ETH_ENABLE)     +                     (NBNS_ENABLE * ETH_ENABLE))
+N
+N#if (__UDPNS > UDP_NUMSOCKS)
+X#if (((0 * 2) + (0 * (1 + 1)) + (0* 1) + (0 * 1) + (0 * 1) + (0 * 1) + (0 * 1) + (1 * 1)) > 2)
+S #error Number of UDP Sockets too small
+N#endif
+N
+N/* Check BSD Server sockets */
+N#if (BSD_ENABLE && (BSD_SRVSOCKS > BSD_NUMSOCKS))
+X#if (0 && (1 > 2))
+S #error Number of BSD Server sockets too large
+N#endif
+N
+N/* Check BSD Hostname resolver */
+N#if (BSD_ENABLE && BSD_GETHOSTEN && !DNS_ENABLE)
+X#if (0 && 0 && !0)
+S #error BSD Hostname resolver needs DNS enabled
+N#endif
+N
+N/* Check PPP Authentication protocols */
+N#if (PPP_ENABLE && PPP_AUTHEN && !(PPP_PAPEN | PPP_CHAPEN))
+X#if (0 && 1 && !(1 | 1))
+S #error PPP Authentication needs PAP or/and CHAP enabled
+N#endif
+N
+N/* Check Net_Config.c version */
+N#if (TNET_ENABLE && !defined(TNET_IDLETOUT))                     || \
+N    (FTP_ENABLE  && !defined(FTP_IDLETOUT))                      || \
+N    (PPP_ENABLE  && (defined(_ACCM1) || defined(LCP_MAXRETRY)))
+X#if (0 && !1L)                     ||     (0  && !1L)                      ||     (0  && (0L || 0L))
+S #error Net_Config.c too old, needs update
+N#endif
+N
+N/* Check Maximum Segment Size of TCP Socket */
+N#if (TCP_ENABLE && ((TCP_MAXSEGSZ < 536) || (TCP_MAXSEGSZ > 1460)))
+X#if (1 && ((1460 < 536) || (1460 > 1460)))
+S #error TCP Maximum Segment Size out of range
+N#endif
+N
+N/* Check Receive Window Size of TCP Socket */
+N#if (TCP_ENABLE && (TCP_RECWINSZ < TCP_MAXSEGSZ))
+X#if (1 && (4380 < 1460))
+S #error TCP Receive Window Size too small
+N#endif
+N
+N/* Check Block Size of TFTP Server */
+N#if (TFTPC_ENABLE && ((TFTPC_BLOCKSZ < 128) || (TFTPC_BLOCKSZ > 1428)))
+X#if (0 && ((512 < 128) || (512 > 1428)))
+S #error TFTP Client Block Size out of range
+N#endif
+N
+N/* Local Machine info */
+NLOCALM const nlocalm[3] = {
+N /* Ethernet: Local IP address */
+N#if (ETH_ENABLE)
+X#if (1)
+N {{_IP1,_IP2,_IP3,_IP4},
+X {{192,168,80,100},
+N  /* Default Gateway IP address */
+N  {_GW1,_GW2,_GW3,_GW4},
+X  {192,168,1,1},
+N  /* Subnet IP Mask */
+N  {_MSK1,_MSK2,_MSK3,_MSK4},
+X  {255,255,255,0},
+N  /* Primary DNS Server IP */
+N  {_pDNS1,_pDNS2,_pDNS3,_pDNS4},
+X  {194,25,2,129},
+N  /* Secondary DNS Server IP */
+N  {_sDNS1,_sDNS2,_sDNS3,_sDNS4}},
+X  {194,25,2,130}},
+N#else
+S {{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}},
+N#endif
+N /* PPP: Local IP address */
+N#if (PPP_ENABLE)
+X#if (0)
+S {{_IP1P,_IP2P,_IP3P,_IP4P},
+S  /* Default Gateway IP address */
+S  {0,0,0,0},
+S  /* Subnet IP Mask */
+S  {_MSK1P,_MSK2P,_MSK3P,_MSK4P},
+S  /* Primary DNS Server IP */
+S  {_pDNS1P,_pDNS2P,_pDNS3P,_pDNS4P},
+S  /* Secondary DNS Server IP */
+S  {_sDNS1P,_sDNS2P,_sDNS3P,_sDNS4P}},
+N#else
+N {{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}},
+N#endif
+N /* SLIP: Local IP address */
+N#if (SLIP_ENABLE)
+X#if (0)
+S {{_IP1S,_IP2S,_IP3S,_IP4S},
+S  /* Default Gateway IP address */
+S  {0,0,0,0},
+S  /* Subnet IP Mask */
+S  {_MSK1S,_MSK2S,_MSK3S,_MSK4S},
+S  /* Primary DNS Server IP */
+S  {_pDNS1S,_pDNS2S,_pDNS3S,_pDNS4S},
+S  /* Secondary DNS Server IP */
+S  {_sDNS1S,_sDNS2S,_sDNS3S,_sDNS4S}}
+N#else
+N {{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}},
+N#endif
+N};
+N/* System configuration */
+Nstatic U32 mem_pool[MEM_SIZE];
+Xstatic U32 mem_pool[2048];
+N       U8  lhost_name[16] = LHOST_NAME;
+X       U8  lhost_name[16] = "armfly";
+NSYS_CFG sys_config = {
+N  mem_pool,
+N  sizeof (mem_pool),
+N  TICK_RATE,
+X  (1000 / 100),
+N  TICK_INTERVAL,
+X  100,
+N  TICK_RATE / 5,
+X  (1000 / 100) / 5,
+N  (PPP_GETIP<<5   | SLIP_DEFGW<<4 | PPP_DEFGW<<3 |
+X  (1<<5   | 1<<4 | 1<<3 |
+N   SLIP_ENABLE<<2 | PPP_ENABLE<<1 | ETH_ENABLE),
+X   0<<2 | 0<<1 | 1),
+N  lhost_name
+N};
+N/* Ethernet network interface */
+N#if (ETH_ENABLE)
+X#if (1)
+N static ARP_INFO arp_table[ARP_TABSIZE];
+X static ARP_INFO arp_table[10];
+N U8     own_hw_adr[ETH_ADRLEN] = {_MAC1,_MAC2,_MAC3,_MAC4,_MAC5,_MAC6};
+X U8     own_hw_adr[6] = {0x1E,0x30,0x6C,0xA2,0x45,0x5E};
+N ARP_CFG arp_config = {
+N   arp_table,
+N   ARP_TABSIZE,
+X   10,
+N   ARP_TIMEOUT,
+X   150,
+N   ARP_MAXRETRY,
+X   4,
+N   ARP_RESEND,
+X   2,
+N   ARP_NOTIFY
+X   0
+N };
+N#endif
+N#if (PPP_ENABLE)
+X#if (0)
+S PPP_CFG ppp_config = {
+S   PPP_ACCM,
+S   5 * TICK_RATE,
+S   PPP_RETRYTOUT * TICK_RATE,
+S   PPP_ECHOTOUT,
+S   PPP_MAXRETRY,
+S   ((PPP_CHAPEN << 1) | PPP_PAPEN) * PPP_AUTHEN
+S };
+N#endif
+N#if (SLIP_ENABLE)
+X#if (0)
+S U16 const slip_SerTout  = 5 * TICK_RATE;
+N#endif
+N#if (ETH_ENABLE && IGMP_ENABLE)
+X#if (1 && 0)
+S static IGMP_INFO igmp_table[IGMP_TABSIZE];
+S IGMP_CFG  igmp_config = {
+S   igmp_table,
+S   IGMP_TABSIZE,
+S };
+N#endif
+N#if (ETH_ENABLE && DHCP_ENABLE)
+X#if (1 && 0)
+S DHCP_CFG dhcp_config = {
+S   DHCP_VCID,
+S   (DHCP_NTPSRV << 1) | DHCP_BOOTF
+S };
+N#endif
+N#if (UDP_ENABLE)
+X#if (1)
+N static UDP_INFO udp_scb[UDP_NUMSOCKS];
+X static UDP_INFO udp_scb[2];
+N UDP_CFG udp_config = {
+N   udp_scb,
+N   UDP_NUMSOCKS,
+X   2,
+N };
+N#endif
+N#if (TCP_ENABLE)
+X#if (1)
+N static TCP_INFO tcp_scb[TCP_NUMSOCKS];
+X static TCP_INFO tcp_scb[2];
+N TCP_CFG tcp_config = {
+N   tcp_scb,
+N   TCP_NUMSOCKS,
+X   2,
+N   TCP_MAXRETRY,
+X   5,
+N   TCP_RETRYTOUT * TICK_RATE,
+X   4 * (1000 / 100),
+N   (200 + TICK_INTERVAL - 1) / TICK_INTERVAL,
+X   (200 + 100 - 1) / 100,
+N   TCP_SYN_RETRY_TOUT * TICK_RATE,
+X   2 * (1000 / 100),
+N   TCP_INIT_RETRY_TOUT * TICK_RATE,
+X   1 * (1000 / 100),
+N   TCP_DEFTOUT,
+X   120,
+N   TCP_MAXSEGSZ,
+X   1460,
+N   TCP_RECWINSZ,
+X   4380,
+N   TCP_CONRETRY
+X   7
+N };
+N#endif
+N#if (HTTP_ENABLE)
+X#if (0)
+S static HTTP_INFO http_scb[HTTP_NUMSESS];
+S static U8 http_passw[PASSW_SZ] = HTTP_AUTHPASSW;
+S HTTP_CFG  http_config = {
+S   http_scb,
+S   HTTP_NUMSESS,
+S   HTTP_ENAUTH,
+S   HTTP_PORTNUM,
+S   HTTP_SRVID,
+S #if (HTTP_ENAUTH)
+S   HTTP_AUTHREALM,
+S   HTTP_AUTHUSER,
+S   http_passw
+S #else
+S   "","",""
+S #endif
+S };
+N#endif
+N#if (TNET_ENABLE)
+X#if (0)
+S static TNET_INFO tnet_scb[TNET_NUMSESS];
+S static U8 tnet_passw[PASSW_SZ] = TNET_AUTHPASSW;
+S TNET_CFG  tnet_config = {
+S   tnet_scb,
+S   TNET_NUMSESS,
+S   TNET_ENAUTH,
+S   TNET_NOECHO,
+S   TNET_PORTNUM,
+S   TNET_IDLETOUT,
+S #if (TNET_ENAUTH)
+S   TNET_AUTHUSER,
+S   tnet_passw
+S #else
+S   "",""
+S #endif
+S };
+N#endif
+N#if (TFTP_ENABLE)
+X#if (0)
+S static TFTP_INFO tftp_scb[TFTP_NUMSESS];
+S TFTP_CFG tftp_config = {
+S   &tftp_scb[0],
+S   TFTP_NUMSESS,
+S   TFTP_MAXRETRY,
+S   TFTP_PORTNUM,
+S   TFTP_DEFTOUT,
+S   TFTP_ENFWALL
+S };
+N#endif
+N#if (TFTPC_ENABLE)
+X#if (0)
+S TFTPC_CFG tftpc_config = {
+S   TFTPC_BLOCKSZ,
+S   (TFTPC_RETRYTO * TICK_RATE + 5) / 10,
+S   TFTPC_MAXRETRY
+S };
+N#endif
+N#if (FTP_ENABLE)
+X#if (0)
+S static FTP_INFO ftp_scb[FTP_NUMSESS];
+S static U8 ftp_passw[PASSW_SZ] = FTP_AUTHPASSW;
+S #define _LS(s)  sizeof(s)-1,s
+S FTP_CFG ftp_config = {
+S   ftp_scb,
+S   FTP_NUMSESS,
+S   FTP_ENAUTH,
+S   FTP_PORTNUM,
+S   FTP_IDLETOUT,
+S  _LS(FTP_WELMSG),
+S #if (FTP_ENAUTH)
+S   FTP_AUTHUSER,
+S   ftp_passw
+S #else
+S   "",""
+S #endif
+S };
+N#endif
+N#if (FTPC_ENABLE)
+X#if (0)
+S FTPC_CFG ftpc_config = {
+S   FTPC_DEFTOUT,
+S   FTPC_PASVMODE
+S };
+N#endif
+N#if (DNS_ENABLE)
+X#if (0)
+S static DNS_CACHE dns_table[DNS_TABSIZE];
+SDNS_CFG dns_config = {
+S   dns_table,
+S   DNS_TABSIZE
+S };
+N#endif
+N#if (SMTP_ENABLE)
+X#if (0)
+S U8 const smtp_DefTout = SMTP_DEFTOUT;
+N#endif
+N#if (SNMP_ENABLE)
+X#if (0)
+S SNMP_CFG snmp_config = {
+S   SNMP_PORTNUM,
+S   SNMP_TRAPPORT,
+S   { SNMP_TRAPIP1, SNMP_TRAPIP2, SNMP_TRAPIP3, SNMP_TRAPIP4 },
+S   SNMP_COMMUNITY,
+S   TICK_INTERVAL / 5
+S };
+N#endif
+N#if (SNTP_ENABLE)
+X#if (0)
+S SNTP_CFG sntp_config = {
+S { SNTP_SRVIP1, SNTP_SRVIP2, SNTP_SRVIP3, SNTP_SRVIP4 },
+S SNTP_BCMODE
+S };
+N#endif
+N#if (BSD_ENABLE) 
+X#if (0) 
+S static BSD_INFO bsd_scb[BSD_NUMSOCKS + BSD_SRVSOCKS];
+S #ifdef __RTX
+S  static OS_MUT bsd_mutex;
+S  #define BSD_INRTX  __TRUE
+S #else
+S  #define BSD_INRTX  __FALSE
+S #endif
+S BSD_CFG bsd_config = {
+S   bsd_scb,
+S   BSD_NUMSOCKS + BSD_SRVSOCKS,
+S   BSD_INRTX,
+S   BSD_RCVTOUT * TICK_RATE
+S };
+N#endif
+N
+N/*----------------------------------------------------------------------------
+N *      Library Interface
+N *---------------------------------------------------------------------------*/
+N
+N
+N/*--------------------------- init_system -----------------------------------*/
+N
+Nvoid init_system (void) {
+N  /* Initialize configured interfaces and applications. */
+N
+N#if (ETH_ENABLE)
+X#if (1)
+N  eth_init_link ();
+N#endif
+N#if (PPP_ENABLE)
+X#if (0)
+S  ppp_init_link ();
+N#endif
+N#if (SLIP_ENABLE)
+X#if (0)
+S  slip_init_link ();
+N#endif
+N  ip_init ();
+N  icmp_init ();
+N#if (ETH_ENABLE && IGMP_ENABLE)
+X#if (1 && 0)
+S  igmp_init ();
+N#endif
+N#if (UDP_ENABLE)
+X#if (1)
+N  udp_init ();
+N#endif
+N#if (TCP_ENABLE)
+X#if (1)
+N  tcp_init ();
+N#endif
+N#if (BSD_ENABLE)
+X#if (0)
+S  bsd_init ();
+S #if (BSD_GETHOSTEN)
+S  bsd_init_host ();
+S #endif
+N#endif
+N#if (HTTP_ENABLE)
+X#if (0)
+S  http_init ();
+N#endif
+N#if (TNET_ENABLE)
+X#if (0)
+S  tnet_init ();
+N#endif
+N#if (TFTP_ENABLE)
+X#if (0)
+S  tftp_init ();
+N#endif
+N#if (TFTPC_ENABLE)
+X#if (0)
+S  tftpc_init ();
+N#endif
+N#if (FTP_ENABLE)
+X#if (0)
+S  ftp_init ();
+N#endif
+N#if (FTPC_ENABLE)
+X#if (0)
+S  ftpc_init ();
+N#endif
+N#if (ETH_ENABLE && NBNS_ENABLE)
+X#if (1 && 1)
+N  nbns_init ();
+N#endif
+N#if (ETH_ENABLE && DHCP_ENABLE)
+X#if (1 && 0)
+S  dhcp_init ();
+N#elif (ETH_ENABLE)
+X#elif (1)
+N  arp_notify ();
+N#endif
+N#if (DNS_ENABLE)
+X#if (0)
+S  dns_init ();
+N#endif
+N#if (SMTP_ENABLE)
+X#if (0)
+S  smtp_init ();
+N#endif
+N#if (SNMP_ENABLE)
+X#if (0)
+S  snmp_init ();
+N#endif
+N#if (SNTP_ENABLE)
+X#if (0)
+S  sntp_init ();
+N#endif
+N
+N#if (BSD_ENABLE && __RTX)
+X#if (0 && __RTX)
+S  os_mut_init (bsd_mutex);
+N#endif
+N}
+N
+N
+N/*--------------------------- run_system ------------------------------------*/
+N
+Nvoid run_system (void) {
+N  /* Run configured interfaces and applications. */
+N
+N#if (BSD_ENABLE && __RTX)
+X#if (0 && __RTX)
+S  os_mut_wait (bsd_mutex, 0xFFFF);
+N#endif
+N
+N#if (ETH_ENABLE)
+X#if (1)
+N  eth_run_link ();
+N#endif
+N#if (PPP_ENABLE)
+X#if (0)
+S  ppp_run_link ();
+N#endif
+N#if (SLIP_ENABLE)
+X#if (0)
+S  slip_run_link ();
+N#endif
+N  ip_run_local ();
+N  icmp_run_engine ();
+N#if (ETH_ENABLE && IGMP_ENABLE)
+X#if (1 && 0)
+S  igmp_run_host ();
+N#endif
+N#if (TCP_ENABLE)
+X#if (1)
+N  tcp_poll_sockets ();
+N#endif
+N#if (BSD_ENABLE)
+X#if (0)
+S  bsd_poll_sockets ();
+N#endif
+N#if (HTTP_ENABLE)
+X#if (0)
+S  http_run_server ();
+N#endif
+N#if (TNET_ENABLE)
+X#if (0)
+S  tnet_run_server ();
+N#endif
+N#if (TFTP_ENABLE)
+X#if (0)
+S  tftp_run_server ();
+N#endif
+N#if (TFTPC_ENABLE)
+X#if (0)
+S  tftpc_run_client ();
+N#endif
+N#if (FTP_ENABLE)
+X#if (0)
+S  ftp_run_server ();
+N#endif
+N#if (FTPC_ENABLE)
+X#if (0)
+S  ftpc_run_client ();
+N#endif
+N#if (ETH_ENABLE && DHCP_ENABLE)
+X#if (1 && 0)
+S  dhcp_run_client ();
+N#endif
+N#if (DNS_ENABLE)
+X#if (0)
+S  dns_run_client ();
+N#endif
+N#if (SMTP_ENABLE)
+X#if (0)
+S  smtp_run_client ();
+N#endif
+N#if (SNMP_ENABLE)
+X#if (0)
+S  snmp_run_agent ();
+N#endif
+N#if (SNTP_ENABLE)
+X#if (0)
+S  sntp_run_client ();
+N#endif
+N
+N#if (BSD_ENABLE && __RTX)
+X#if (0 && __RTX)
+S  os_mut_release (bsd_mutex);
+N#endif
+N}
+N
+N
+N/*--------------------------- bsd_suspend/resume ----------------------------*/
+N
+N#if (BSD_ENABLE && __RTX)
+X#if (0 && __RTX)
+S__used void bsd_suspend (U8 *tsk_id) {
+S  /* Suspend a socket owner task. */
+S  *tsk_id = (U8)os_tsk_self ();
+S  os_mut_release (bsd_mutex);
+S  os_evt_wait_or (0x8000, 0xFFFF);
+S  os_mut_wait (bsd_mutex, 0xFFFF);
+S}
+S
+S__used void bsd_resume (U8 tsk_id) {
+S  /* Resume a task waiting for a socket event. */
+S  if (tsk_id) {
+S    os_evt_set (0x8000, tsk_id);
+S  }
+S}
+N#endif
+N
+N
+N/*--------------------------- bsd_lock/unlock -------------------------------*/
+N
+N#if (BSD_ENABLE && __RTX)
+X#if (0 && __RTX)
+S__used void bsd_lock (void) {
+S  /* Acquire mutex - Lock TCPnet functions. */
+S  os_mut_wait (bsd_mutex, 0xFFFF);
+S}
+S
+S__used void bsd_unlock (void) {
+S  /* Release mutex - Unlock TCPnet functions. */
+S  os_mut_release (bsd_mutex);
+S}
+N#endif
+N
+N
+N/*--------------------------- size optimization -----------------------------*/
+N
+N#if !(ETH_ENABLE)
+X#if !(1)
+S/* Empty functions when Ethernet Interface is disabled. */
+SBOOL eth_chk_adr (OS_FRAME *frame)   { return (__FALSE); }
+SU8  *eth_get_adr (U8 *ipadr)         { return (NULL); }
+SBOOL eth_send_frame (OS_FRAME *frame){ return (__FALSE); }
+N#endif
+N
+N#if !(ETH_ENABLE && IGMP_ENABLE)
+X#if !(1 && 0)
+N/* Empty functions when IP Multicasting is not enabled. */
+NBOOL igmp_is_member (U8 *ipadr)      { return (__FALSE); }
+XBOOL igmp_is_member (U8 *ipadr)      { return (0); }
+Nvoid igmp_process (OS_FRAME *frame)  { ; }
+N#endif
+N
+N#if (ETH_ENABLE && !DHCP_ENABLE)
+X#if (1 && !0)
+N/* Empty function when DHCP not enabled. */
+Nvoid dhcp_disable (void)             { ; }
+N#endif
+N
+N#if !(PPP_ENABLE)
+X#if !(0)
+N/* Empty function when PPP Interface is disabled. */
+NBOOL ppp_send_frame (OS_FRAME *frame, U16 prot) { return (__FALSE); }
+XBOOL ppp_send_frame (OS_FRAME *frame, U16 prot) { return (0); }
+N#endif
+N
+N#if (PPP_ENABLE && !(PPP_AUTHEN && PPP_PAPEN))
+X#if (0 && !(1 && 1))
+S/* Empty functions when PAP authentication not enabled. */
+Svoid pap_init (void)                 { ; }
+Svoid pap_run (void)                  { ; }
+Svoid pap_process (OS_FRAME *frame)   { ; }
+N#endif
+N
+N#if (PPP_ENABLE && !(PPP_AUTHEN && PPP_CHAPEN))
+X#if (0 && !(1 && 1))
+S/* Empty functions when CHAP authentication not enabled. */
+Svoid chap_init (void)                { ; }
+Svoid chap_run (void)                 { ; }
+Svoid chap_process (OS_FRAME *frame)  { ; }
+N#endif
+N
+N#if !(SLIP_ENABLE)
+X#if !(0)
+N/* Empty function when SLIP Interface is disabled. */
+NBOOL slip_send_frame (OS_FRAME *frame) { return (__FALSE); }
+XBOOL slip_send_frame (OS_FRAME *frame) { return (0); }
+N#endif
+N
+N#if !(UDP_ENABLE)
+X#if !(1)
+S/* Empty function when UDP socket not enabled. */
+Svoid udp_process (OS_FRAME *frame)   { ; }
+N#endif
+N
+N#if !(TCP_ENABLE)
+X#if !(1)
+S/* Empty function when TCP socket not enabled. */
+Svoid tcp_process (OS_FRAME *frame)   { ; }
+N#endif
+N
+N#if !(SNTP_ENABLE)
+X#if !(0)
+N/* Empty function when SNTP not enabled. */
+NBOOL sntp_get_time (U8 *ipadr, void (*cbfunc)(U32)) { return(__FALSE); }
+XBOOL sntp_get_time (U8 *ipadr, void (*cbfunc)(U32)) { return(0); }
+N#endif
+N
+N#if (BSD_ENABLE && !__RTX)
+X#if (0 && !__RTX)
+S/* Empty functions for non RTX environment. */
+S__used U8   bsd_wait   (BSD_INFO *bsd_s, U8 evt) { return (0);}
+S__used void bsd_enable (BSD_INFO *bsd_s, U8 evt) { ; }
+N#endif
+N
+N#endif    /* __NET_CONFIG__ */
+N
+N
+N/*----------------------------------------------------------------------------
+N *      Library for Net_Debug.c
+N *---------------------------------------------------------------------------*/
+N
+N#ifdef __NET_DEBUG__
+S
+S/* Non-Critical Net_Debug.c upgrade */
+S#ifndef DBG_TIME
+S #define DBG_TIME   1
+S#endif
+S#ifdef DBG_APP
+S #define DBG_HTTP   DBG_APP
+S #define DBG_FTP    DBG_APP
+S #define DBG_FTPC   DBG_APP
+S #define DBG_TNET   DBG_APP
+S #define DBG_TFTP   DBG_APP
+S #define DBG_TFTPC  DBG_APP
+S #define DBG_SMTP   DBG_APP
+S#endif
+S
+S#include <stdarg.h>
+S#include <stdio.h>
+S
+S#pragma diag_suppress 111
+S
+Sextern char *dbg_time (void);
+Sextern char *dbg_proc (U32 proc);
+S
+S/*--------------------------- __debug__ -------------------------------------*/
+S
+Svoid __debug__ (U32 proc, const char *fmt, ...) {
+S  /* Print TCPnet Debug messages. */
+S  va_list args;
+S
+S  switch (proc) {
+S#if (DBG_MEM > 1)
+S    case MODULE_MEM:  break;
+S#endif
+S#if (DBG_ETH > 1)
+S    case MODULE_ETH:  break;
+S#endif
+S#if (DBG_PPP > 1)
+S    case MODULE_PPP:  break;
+S#endif
+S#if (DBG_SLIP > 1)
+S    case MODULE_SLIP: break;
+S#endif
+S#if (DBG_ARP > 1)
+S    case MODULE_ARP:  break;
+S#endif
+S#if (DBG_IP > 1)
+S    case MODULE_IP:   break;
+S#endif
+S#if (DBG_ICMP > 1)
+S    case MODULE_ICMP: break;
+S#endif
+S#if (DBG_IGMP > 1)
+S    case MODULE_IGMP: break;
+S#endif
+S#if (DBG_UDP > 1)
+S    case MODULE_UDP:  break;
+S#endif
+S#if (DBG_TCP > 1)
+S    case MODULE_TCP:  break;
+S#endif
+S#if (DBG_NBNS > 1)
+S    case MODULE_NBNS: break;
+S#endif
+S#if (DBG_DHCP > 1)
+S    case MODULE_DHCP: break;
+S#endif
+S#if (DBG_DNS > 1)
+S    case MODULE_DNS:  break;
+S#endif
+S#if (DBG_SNMP > 1)
+S    case MODULE_SNMP: break;
+S#endif
+S#if (DBG_BSD > 1)
+S    case MODULE_BSD:  break;
+S#endif
+S#if (DBG_HTTP > 1)
+S    case MODULE_HTTP: break;
+S#endif
+S#if (DBG_FTP > 1)
+S    case MODULE_FTP:  break;
+S#endif
+S#if (DBG_FTPC > 1)
+S    case MODULE_FTPC: break;
+S#endif
+S#if (DBG_TNET > 1)
+S    case MODULE_TNET: break;
+S#endif
+S#if (DBG_TFTP > 1)
+S    case MODULE_TFTP: break;
+S#endif
+S#if (DBG_TFTPC > 1)
+S    case MODULE_TFTPC:break;
+S#endif
+S#if (DBG_SMTP > 1)
+S    case MODULE_SMTP: break;
+S#endif
+S#if (DBG_SNTP > 1)
+S    case MODULE_SNTP: break;
+S#endif
+S    default: return;
+S  }
+S#if (DBG_TIME)
+S  printf (dbg_time());
+S#endif
+S  printf ("%s:",dbg_proc(proc));
+S
+S  va_start (args,fmt);
+S  vprintf (fmt,args);
+S  va_end (args);
+S}
+S
+S
+S/*--------------------------- __error__ -------------------------------------*/
+S
+Svoid __error__ (U32 proc, const char *fmt, ...) {
+S  /* Print TCPnet Error messages. */
+S  va_list args;
+S
+S  switch (proc) {
+S#if (DBG_MEM > 0)
+S    case MODULE_MEM:  break;
+S#endif
+S#if (DBG_ETH > 0)
+S    case MODULE_ETH:  break;
+S#endif
+S#if (DBG_PPP > 0)
+S    case MODULE_PPP:  break;
+S#endif
+S#if (DBG_SLIP > 0)
+S    case MODULE_SLIP: break;
+S#endif
+S#if (DBG_ARP > 0)
+S    case MODULE_ARP:  break;
+S#endif
+S#if (DBG_IP > 0)
+S    case MODULE_IP:   break;
+S#endif
+S#if (DBG_ICMP > 0)
+S    case MODULE_ICMP: break;
+S#endif
+S#if (DBG_IGMP > 0)
+S    case MODULE_IGMP: break;
+S#endif
+S#if (DBG_UDP > 0)
+S    case MODULE_UDP:  break;
+S#endif
+S#if (DBG_TCP > 0)
+S    case MODULE_TCP:  break;
+S#endif
+S#if (DBG_NBNS > 0)
+S    case MODULE_NBNS: break;
+S#endif
+S#if (DBG_DHCP > 0)
+S    case MODULE_DHCP: break;
+S#endif
+S#if (DBG_DNS > 0)
+S    case MODULE_DNS:  break;
+S#endif
+S#if (DBG_SNMP > 0)
+S    case MODULE_SNMP: break;
+S#endif
+S#if (DBG_BSD > 0)
+S    case MODULE_BSD:  break;
+S#endif
+S#if (DBG_HTTP > 0)
+S    case MODULE_HTTP: break;
+S#endif
+S#if (DBG_FTP > 0)
+S    case MODULE_FTP:  break;
+S#endif
+S#if (DBG_FTPC > 0)
+S    case MODULE_FTPC: break;
+S#endif
+S#if (DBG_TNET > 0)
+S    case MODULE_TNET: break;
+S#endif
+S#if (DBG_TFTP > 0)
+S    case MODULE_TFTP: break;
+S#endif
+S#if (DBG_TFTPC > 0)
+S    case MODULE_TFTPC:break;
+S#endif
+S#if (DBG_SMTP > 0)
+S    case MODULE_SMTP: break;
+S#endif
+S#if (DBG_SNTP > 0)
+S    case MODULE_SNTP: break;
+S#endif
+S    default: return;
+S  }
+S#if (DBG_TIME)
+S  printf (dbg_time());
+S#endif
+S  printf ("%s-ERR:",dbg_proc(proc));
+S
+S  va_start (args,fmt);
+S  vprintf (fmt,args);
+S  va_end (args);
+S}
+S
+N#endif    /* __NET_DEBUG__ */
+N
+N
+N/*----------------------------------------------------------------------------
+N * end of file
+N *---------------------------------------------------------------------------*/
+L 931 "..\..\RL-ARM\Config\Net_Config.c" 2
+N
+N/*----------------------------------------------------------------------------
+N * end of file
+N *---------------------------------------------------------------------------*/
